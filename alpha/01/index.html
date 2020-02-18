@@ -18,6 +18,8 @@
 		<script src="/js/inflate.min.js"></script>
 		<script src="/js/zangodb.min.js"></script>
 		<script src="/js/bootstrap.min.js"></script>
+		<script src="/textme/js/socketcluster.js"></script>
+		<script src="/textme/js/sc-codec-min-bin.js"></script>
 
 		<style>
 
@@ -50,43 +52,9 @@
 
 		</style>
 
-	</head>
-
-	<body ontouchstart="">
-
-		<script src="/textme/js/three.js"></script>
-		<script src="/textme/js/app.js"></script>
-		<script src="/textme/js/TabUI.js"></script>
-		<script src="/textme/js/MeshWalk.js"></script>
-		<script src="/textme/js/UVsDebug.js"></script>
-		<script src="/textme/js/FBXLoader.js"></script>
-		<script src="/textme/js/VirtualInput.js"></script>
-		<script src="/textme/js/EditorControls.js"></script>
-		<script src="/textme/js/socketcluster.js"></script>
-		<script src="/textme/js/sc-codec-min-bin.js"></script>
-
 		<script>
 
-			(function(){
-
-				var sidePanel = createSidePanel();
-				var loginTab = TabUI.add( "Login", "login-tab" );
-				var avatarTab = TabUI.add( "Avatar", "avatar-tab" );
-				var textmeTab = TabUI.add( "TextMe", "textme-tab" );
-				var mobileTab = TabUI.add( "Mobile", "mobile-tab" );
-				var controlTab = TabUI.add( "Control", "control-tab" );
-				var controlTab = TabUI.add( "Settings", "settings-tab" );
-
-				document.body.appendChild( sidePanel );
-				TabUI.append("TextMe", "Avatar", "Mobile", "Control", "Login", "Settings" );
-
-			})();
-
-		</script>
-
-		<script>
-
-			var debugMode = true;
+			debugMode = true;
 
 			socket = socketCluster.create({
 			//  port:443,
@@ -109,6 +77,353 @@
 			socket.on("subscribe", function( name, object ){
 				debugMode && console.log("subscribed successfully to channel:", object );
 			});
+
+		</script>
+
+	</head>
+
+	<body ontouchstart="">
+
+		<script src="/textme/js/three.js"></script>
+		<script src="/textme/js/app.js"></script>
+		<script src="/textme/js/TabUI.js"></script>
+		<script src="/textme/js/MeshWalk.js"></script>
+		<script src="/textme/js/UVsDebug.js"></script>
+		<script src="/textme/js/FBXLoader.js"></script>
+		<script src="/textme/js/VirtualInput.js"></script>
+		<script src="/textme/js/EditorControls.js"></script>
+
+		<script>
+
+			(function(){
+
+				var sidePanel = createSidePanel();
+				var loginTab = TabUI.add( "Login", "login-tab" );
+				var avatarTab = TabUI.add( "Avatar", "avatar-tab" );
+				var textmeTab = TabUI.add( "TextMe", "textme-tab" );
+				var mobileTab = TabUI.add( "Mobile", "mobile-tab" );
+				var controlTab = TabUI.add( "Control", "control-tab" );
+				var controlTab = TabUI.add( "Settings", "settings-tab" );
+
+				document.body.appendChild( sidePanel );
+				TabUI.append("TextMe", "Avatar", "Mobile", "Control", "Login", "Settings" );
+
+			})();
+
+		</script>
+
+		<script>
+
+			(function(){
+
+				var input;
+				var tab = TabUI.TextMe;
+				var textboard = new Textboard();
+				var textinput = new TextInput();
+				var sendbutton = new SendButton();
+				var clearbutton = new ClearButton( textboard );
+				var textButtons = function(){
+
+					var row = document.createElement("div");
+					row.style.cssText = "margin:10px 15px;height:35px;text-align:center;";
+
+					row.appendChild( clearbutton );
+					row.appendChild( sendbutton );
+
+					return row;
+				};
+
+				var header = document.createElement("h3");
+				header.textContent = "Textboard:";
+				header.style.cssText = "text-align:center;"
+				tab.appendChild( header );
+
+				tab.appendChild( textboard );
+				tab.appendChild( textinput );
+				tab.appendChild( textButtons() );
+
+				function Textboard(){
+
+					var board = document.createElement("div");
+					board.id = "text-board"; // important!
+					board.style.margin = "20px auto";
+					board.style.border = "3px solid";
+					board.style.padding = "10px;";
+					board.style.maxWidth = "280px";
+					board.style.minHeight = "200px";
+					board.style.maxHeight = "350px";
+					board.style.overflowY = "auto";
+					board.style.overflowX = "hidden";
+					board.style.borderRadius = "13px";
+
+					return board;
+				}
+
+				function TextInput(){
+
+					var row = document.createElement("div");
+					row.style.cssText = "margin:10px 0px;height:35px;text-align:center;";
+
+					input = document.createElement("input");
+					input.id = "text-input";
+					input.type = "text";
+					input.style.color = "#fff";
+					input.style.margin = "auto";
+					input.style.border = "1px solid";
+					input.style.padding = "10px";
+					input.style.maxWidth = "280px";
+					input.style.fontSize = "large";
+					input.style.fontWeight = "normal";
+					input.style.background = "none";
+					input.setAttribute("placeholder", "type a message");
+					input.classList.add("form-control");
+
+				//	KeyInputControls.
+					input.addEventListener( "blur", keyInputControls.On, false);
+					input.addEventListener( "focus", keyInputControls.Off, false );
+
+					input.addEventListener( "keydown", function( e ){
+						e.stopPropagation(); // always, important!
+					});
+
+					input.addEventListener( "keyup", function( e ){
+						e.stopPropagation(); // always, important!
+
+					//	"enter" e.keyCode:13
+						if ( e.keyCode == 13 ) {
+
+							if ( !input.value ) return;
+
+							sendMessage();
+
+						}
+
+					});
+
+				//	Prevent editor to delete objects.
+				//	input.addEventListener( "keydown", preventEditorPropagation, false );
+
+					row.appendChild( input );
+
+					return row;
+				}
+
+				function ClearButton( board ){
+
+					var interval;
+
+					var button = document.createElement("div");
+					button.id = "clear-board";
+					button.textContent = "Clear chatboard";
+					button.style.cssText = "min-width:60%;width:fit-content;height:40px;font-size:large;float:left;text-overflow:ellipsis;";
+					button.classList.add( "form-control", "btn", "btn-danger", "btn-white-outline", "gradient-btn" );
+
+					button.addEventListener( "click", function(){
+
+						clearTimeout( interval );
+
+						board.innerHTML = "";
+
+						interval = setTimeout(function(){ 
+
+							var container = document.createElement("div");
+							container.style.color = "#fff";
+							container.style.margin = "5px 10px";
+							container.style.height = "auto";
+							container.style.padding = "10px";
+							container.style.overflow = "hidden";
+							container.style.fontWeight = "normal";
+							container.style.background = "none";
+							var span = document.createElement("i");
+							span.textContent = "Textboard cleared.";
+							container.appendChild( span );
+							board.appendChild( container );
+
+						}, 250);
+
+					});
+
+					return button;
+				}
+
+				function SendButton(){
+
+					var interval;
+
+					var button = document.createElement("div");
+					button.id = "send-message";
+					button.textContent = "Send";
+					button.style.cssText = "min-width:30%;width:fit-content;height:40px;font-size:large;float:right;text-overflow:ellipsis;";
+					button.classList.add( "form-control", "btn", "btn-primary", "btn-white-outline", "gradient-btn" );
+
+					button.addEventListener( "click", function(){
+
+						clearTimeout( button.interval );
+
+						if ( !input.value ) return;
+
+						interval = setTimeout( function(){
+							sendMessage();
+						}, 250);
+
+					});
+
+					return button;
+				}
+
+			//
+
+				var username = "unknown";
+				var guestId = generateSalt();
+				var channelName = "sloothes.com/channels/textme";
+
+				function sendMessage(){
+
+					if ( !(socket && username) ) return;
+
+					var input = document.getElementById("text-input");
+
+				//	if ( !(input && input.value) ) return;
+
+					var data = {
+						sccid: socket.id,
+						message:  input.value,
+						username: username || guestId,
+					};
+
+					socket.publish( channelName, data );
+					debugMode && console.log( "message send:", data );
+
+				//	Clear input.
+
+					setTimeout(function(){
+						input.value = ""; 
+					});
+				}
+
+				function displayMessage(data, options){
+
+					if ( !data ) return;
+				//	if ( !(textboard && data && data.message) ) return;
+
+					var container = document.createElement("div");
+					container.style.margin = "10px";
+					container.style.height = "auto";
+					container.style.padding = "10px";
+					container.style.overflow = "hidden";
+					container.style.borderRadius = "5px";
+					container.style.color = options.color || "#000";
+					container.style.background = options.background || "none";
+					container.style.fontWeight = options.fontWeight || "normal";
+
+					var span = document.createElement("span");
+					span.style.fontWeight = "bold";
+					span.textContent = data.username+": "; // important!
+					container.appendChild( span );
+
+					var span = document.createElement("span");
+					span.textContent = data.message; // important!
+					container.appendChild( span );
+					textboard.appendChild( container );
+
+					setTimeout(function(){
+						container.scrollIntoView({ behavior: "smooth" }); // important!
+					});
+
+				}
+
+				function generateSalt(length, set){
+
+					var length = length || 7;
+					var set = set || "abcdefghijklmnopqurstuvwxyz0123456789ABCDEFGHIJKLMNOPQURSTUVWXYZ";
+
+					var salt = "";
+					for (var i = 0; i < length; i++) {
+						var p = Math.floor(Math.random() * set.length);
+						salt += set[p];
+					}
+
+					return salt;
+				}
+
+				socket.on("connect", function (status) {
+					debugMode && console.log( "socket.id:", socket.id );
+
+				//	Subscribe.
+
+					var chatChannel = socket.subscribe( channelName, { batch: true } );
+					debugMode && console.log("chatChannel:", chatChannel);
+
+				//  On subscribe success.
+
+					chatChannel.on("subscribe", function( name ) {
+						debugMode && console.log( "Subscribed to ", name );
+					});
+
+				//  On Subscribe error.
+
+					chatChannel.on("subscribeFail", function(err) {
+						console.error("Failed to subscribe to the chatroom channel due to error:", err);
+					});
+
+				//  On unsubscribe.
+
+					chatChannel.on("unsubscribe", function( name ) {
+						console.log("Unsubscribed from channel:", name);
+					});
+
+				//  Watch chat channel.
+
+					chatChannel.watch( function( data ){
+						debugMode && console.log( "message received:", data );
+
+						if ( !(data && data.message) ) return;
+						if ( !data.sccid ) data.username = "system";
+						if ( !data.username ) data.username = data.sccid;
+
+						var options = {};
+						if ( data.sccid === socket.id ) {
+							options.color = "#fff";
+							options.background = "#0a7ada";
+						}
+
+						var sidePanel = document.getElementById("side-panel");
+						if ( sidePanel.style.transform != "translateX(0px)" ) {
+							sidePanel.style.transform = "translateX(0px)";
+						}
+
+						var pill = TabUI.TextMe.pill.parentElement;
+						if ( !pill.classList.contains("active") ) {
+							pill.click(); // important!
+						}
+
+						setTimeout( displayMessage, 250, data, options );
+
+					});
+
+				//	On disconnect.
+
+					socket.on("disconnect", function(){
+						socket.unsubscribe( channelName );
+					});
+
+				});
+
+				function preventEditorPropagation( event ) {
+
+					event.stopPropagation(); // important!
+
+				//	Little paranoid safety.
+					switch ( event.keyCode ) {
+						case 8: // backspace.
+						case 46: // delete.
+							event.stopPropagation(); // prevent editor to delete object. important!
+						break;
+					}
+
+				}
+
+			})();
 
 		</script>
 
