@@ -67,6 +67,24 @@
 
 		<script>
 
+			(function(){
+
+				var sidePanel = createSidePanel();
+				var loginTab = TabUI.add( "Login", "login-tab" );
+				var avatarTab = TabUI.add( "Avatar", "avatar-tab" );
+				var textmeTab = TabUI.add( "TextMe", "textme-tab" );
+				var mobileTab = TabUI.add( "Mobile", "mobile-tab" );
+				var controlTab = TabUI.add( "Control", "control-tab" );
+
+				tabUI.append("TextMe", "Avatar", "Mobile", "Login", "Controls");
+				document.body.appendChild( sidePanel );
+
+			})();
+
+		</script>
+
+		<script>
+
 			var debugMode = true;
 
 			socket = socketCluster.create({
@@ -90,16 +108,6 @@
 			socket.on("subscribe", function( name, object ){
 				debugMode && console.log("subscribed successfully to channel:", object );
 			});
-
-		</script>
-
-
-		<script>
-
-			(function(){
-				var sidePanel = sidePanel = createSidePanel();
-				document.body.appendChild( sidePanel );
-			})();
 
 		</script>
 
