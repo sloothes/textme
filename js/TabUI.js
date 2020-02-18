@@ -67,7 +67,7 @@ function createSidePanel(){
 
 	var container = document.createElement("div");
 	container.id = "side-panel-content";
-	container.style.cssText = "position:absolute;top:40px;left:40px;bottom:20px;right:20px;overflow-x:hidden;";
+	container.style.cssText = "position:absolute;top:20px;left:40px;bottom:20px;right:20px;overflow-x:hidden;";
 
 	var sidePillBar = document.createElement("div");
 	sidePillBar.id = "side-pill-bar";
