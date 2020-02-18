@@ -136,7 +136,7 @@
 				};
 
 				var header = document.createElement("h3");
-				header.textContent = "Textboard:";
+				header.textContent = "Textboard";
 				header.style.cssText = "text-align:center;"
 				tab.appendChild( header );
 
@@ -264,6 +264,7 @@
 					button.addEventListener( "click", function(){
 
 						clearTimeout( button.interval );
+						var input = document.getElementById("text-input");
 
 						if ( !input.value ) return;
 
@@ -278,17 +279,16 @@
 
 			//
 
-				var username;
+				var username = "nobody";
 				var guestId = generateSalt();
 				var channelName = "sloothes.com/channels/textme";
 
 				function sendMessage(){
 
-					if ( !(socket && username) ) return;
-
 					var input = document.getElementById("text-input");
 
-				//	if ( !(input && input.value) ) return;
+					if ( !(socket && username) ) return;
+					if ( !(input && input.value) ) return;
 
 					var data = {
 						sccid: socket.id,
@@ -309,7 +309,7 @@
 				function displayMessage(data, options){
 
 					if ( !data ) return;
-				//	if ( !(textboard && data && data.message) ) return;
+				//	if ( !(data && data.message) ) return;
 
 					var container = document.createElement("div");
 					container.style.margin = "10px";
