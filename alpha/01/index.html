@@ -70,14 +70,13 @@
 			(function(){
 
 				var sidePanel = createSidePanel();
-				document.body.appendChild( sidePanel );
-
 				var loginTab = TabUI.add( "Login", "login-tab" );
 				var avatarTab = TabUI.add( "Avatar", "avatar-tab" );
 				var textmeTab = TabUI.add( "TextMe", "textme-tab" );
 				var mobileTab = TabUI.add( "Mobile", "mobile-tab" );
 				var controlTab = TabUI.add( "Control", "control-tab" );
 
+				document.body.appendChild( sidePanel );
 				TabUI.append("TextMe", "Avatar", "Mobile", "Login", "Controls");
 
 			})();
