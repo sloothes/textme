@@ -156,6 +156,7 @@
 
 					var board = document.createElement("div");
 					board.id = "text-board"; // important!
+					board.style.margin = "20px auto 10px";
 					board.style.maxWidth = "280px";
 					board.style.minHeight = "200px";
 					board.style.maxHeight = "350px";
@@ -228,6 +229,7 @@
 					button.addEventListener( "click", function(){
 
 						clearTimeout( interval );
+						var board = document.getElementById("text-board");
 
 						board.innerHTML = "";
 
