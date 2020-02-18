@@ -107,6 +107,8 @@
 
 				document.body.appendChild( sidePanel );
 				TabUI.append("TextMe", "Avatar", "Mobile", "Control", "Login", "Settings" );
+				TabUI.TextMe.role.classList.add("active");
+				TabUI.TextMe.tab.classList.add("in","active");
 
 			})();
 
@@ -144,19 +146,22 @@
 
 				function Textboard(){
 
+					var container = document.createElement("div");
+					container.style.padding = "10px;";
+					container.style.margin = "20px auto";
+					container.style.border = "3px solid";
+					container.style.borderRadius = "13px";
+
 					var board = document.createElement("div");
 					board.id = "text-board"; // important!
-					board.style.margin = "20px auto";
-					board.style.border = "3px solid";
-					board.style.padding = "10px;";
 					board.style.maxWidth = "280px";
 					board.style.minHeight = "200px";
 					board.style.maxHeight = "350px";
 					board.style.overflowY = "auto";
 					board.style.overflowX = "hidden";
-					board.style.borderRadius = "13px";
+					container.appendChild( board );
 
-					return board;
+					return container;
 				}
 
 				function TextInput(){
@@ -273,7 +278,7 @@
 
 			//
 
-				var username = "unknown";
+				var username;
 				var guestId = generateSalt();
 				var channelName = "sloothes.com/channels/textme";
 
@@ -324,7 +329,8 @@
 					var span = document.createElement("span");
 					span.textContent = data.message; // important!
 					container.appendChild( span );
-					textboard.appendChild( container );
+
+					document.getElementById("text-board").appendChild( container );
 
 					setTimeout(function(){
 						container.scrollIntoView({ behavior: "smooth" }); // important!
