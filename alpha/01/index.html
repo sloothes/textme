@@ -61,8 +61,34 @@
 		<script src="/textme/js/FBXLoader.js"></script>
 		<script src="/textme/js/VirtualInput.js"></script>
 		<script src="/textme/js/EditorControls.js"></script>
+		<script src="/textme/js/socketcluster.js"></script>
+		<script src="/textme/js/sc-codec-min-bin.js"></script>
 
+		<script>
 
+			socket = socketCluster.create({
+			//  port:443,
+				hostname: "anywhere3d.com",
+				codecEngine: scCodecMinBin,
+			});
+
+			socket.on("connect", function(status){
+				debugMode && console.log({"socket status": status});
+			});
+
+			socket.on("error", function (err) {
+				console.error( err.stack );
+			});
+
+			socket.on("authStateChange", function( state ){
+				debugMode && console.log({"scene authStateChange": state});
+			});
+
+			socket.on("subscribe", function( name, object ){
+				debugMode && console.log("subscribed successfully to channel:", object );
+			});
+
+		</script>
 
 
 
