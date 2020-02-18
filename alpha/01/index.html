@@ -179,8 +179,8 @@
 					input.classList.add("form-control");
 
 				//	KeyInputControls.
-					input.addEventListener( "blur", keyInputControls.On, false);
-					input.addEventListener( "focus", keyInputControls.Off, false );
+				//	input.addEventListener( "blur", keyInputControls.On, false); // important!
+				//	input.addEventListener( "focus", keyInputControls.Off, false ); // important!
 
 					input.addEventListener( "keydown", function( e ){
 						e.stopPropagation(); // always, important!
