@@ -62,8 +62,8 @@ function createSidePanel(){
 	var sidePanel = document.createElement("div");
 	sidePanel.id = "side-panel";
 	sidePanel.classList.add("side-panel");
-	sidePanel.style.cssText = "position:absolute;top:0;right:0;bottom:0;width:370px;color:#eee;background:rgba(0,0,0,0.4); "
-		+ "-webkit-transform:translateX( 340px ); -webkit-transition:-webkit-transform 500ms ease-out; z-index:9999;";
+	sidePanel.style.cssText = "position:absolute;top:0;right:0;bottom:0;width:370px;color:#eee;background:rgba(255,255,255,1); "
+		+ "-webkit-transform:translateX(0px); -webkit-transition:-webkit-transform 500ms ease-out; z-index:9999;";
 
 	var container = document.createElement("div");
 	container.id = "side-panel-content";
