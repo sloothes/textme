@@ -87,11 +87,13 @@ function createSidePanel(){
 	container.appendChild( sideTabPanel );
 
 	sidePanel.addEventListener( "mouseenter", function(){
+		return; // debug!
 		this.classList.toggle( "pinned", true );
 		this.style["-webkit-transform"] = "translateX( 0 )";
 	});
 
 	sidePanel.addEventListener( "mouseleave", function(){
+		return; // debug!
 		this.classList.toggle( "pinned", false );
 		this.style["-webkit-transform"] = "translateX( 340px )";
 	});
