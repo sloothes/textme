@@ -116,6 +116,8 @@
 
 		<script>
 
+		//	TextMe tab.
+
 			(function(){
 
 				var input;
@@ -401,6 +403,11 @@
 						var pill = TabUI.TextMe.pill.parentElement;
 						if ( !pill.classList.contains("active") ) {
 							pill.click(); // important!
+						//	altenate:
+						//	remove class "active", from all roles,
+						//	remove class "active", "in" from tabs,
+						//	add class "active" to TextMe.role, and
+						//	add class "in", "active" to TextMe.tab.
 						}
 
 						setTimeout( displayMessage, 250, data, options );
