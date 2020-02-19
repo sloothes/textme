@@ -714,8 +714,6 @@
 				joystick2  = new virtualInput.Joystick( $( joystickControls2Selector ), 94, { id: "joystick2" } );
 				jumpButton = new virtualInput.Button(   $( joystickControls1Selector ), 58, { id: "jumpButton", label: "<b>JUMP</b>" } ); // buttonSvgSrc
 
-			//	define animations after animationCotroller has been created.
-
 				joystick1.addEventListener( "active", function onActive() { 
 
 					if (  localPlayer.controller.isJumping 
@@ -838,7 +836,7 @@
 				//	CleanUp animation names.
 				var animations = object.animations;
 				animations.forEach( function( clip ){
-					clip.name = clip.name.replace("Armature|", "");
+					clip.name = clip.name.replace("Armature|", "").replace("MidRiftNoSleeve|", "");
 				});
 
 				//	TODO: Create animation droplist to animations tab.
@@ -847,25 +845,21 @@
 			//	Animation controller.
 
 				animationController = new MW.AnimationController( object );
-				debugMode && console.log( Object.keys( animationController.motion ).join("\n\t") );
+				debugMode && console.log( "\t"+ Object.keys( animationController.motion ).join("\n\t") );
 				
 				animationController.motion["jump"].clampWhenFinished = true;         // important!
 				animationController.motion["jump"].setLoop( THREE.LoopOnce, 0 );     // important!
 
 			/*
-					back_flip_to_uppercut
-					jump
-					right_turn_90
-					skinning_test
-					left_strafe_walking
-					MidRiftNoSleeve|back_flip_to_uppercut
-					walking
-					T-pose
-					idle
-					samba_dancing
-					right_strafe_walking
-					gangnam_style
-					left_turn_90
+					back_flip_to_uppercut,
+					jump, right_turn_90,
+					skinning_test,
+					left_strafe_walking,
+					back_flip_to_uppercut,
+					walking, T-pose, idle,
+					samba_dancing,
+					right_strafe_walking,
+					gangnam_style, left_turn_90
 			*/
 
 			//	localPlayer controller motions.
@@ -878,13 +872,17 @@
 					animationController.play( "walking" ); 
 				});
 
+				localPlayer.controller.addEventListener( "startSliding", function () { 
+					animationController.play( "slide" ); });
+
+				localPlayer.controller.addEventListener( "startFalling", function () { 
+					animationController.play( "slide" ); });
+				});
+
 				localPlayer.controller.addEventListener( "startJumping", function () { 
 					animationController.play( "jump" );
 					animationController.motion["jump"].reset(); // important!
 				});
-
-			//	localPlayer.controller.addEventListener( 'startSliding', function () { animationController.play( 'slide' ); } );
-			//	localPlayer.controller.addEventListener( 'startFalling', function () { animationController.play( 'slide' ); } );
 
 				var clock = new THREE.Clock();
 
@@ -896,18 +894,11 @@
 
 				debugMode && console.log( animationController ); 
 
-
-			//	KeyInput controls.
-
-
-				
-			//	Joystick controls.
-
-
-
-
+			//	Add to scene.
 
 				scene.add( object );
+
+			//	Update avatar.
 
 				(function update(){
 					requestAnimationFrame( update );
