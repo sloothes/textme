@@ -759,11 +759,9 @@
 			var loader = new THREE.FBXLoader();
 			loader.load( url, function( object ){
 
-				fbx = object; // debug!
-
 			//	object is THREE.Group.
 				object.name = "TextMeGirlv2";
-				var s = 1; object.scale.set(s,s,s); // important!
+				var s = 0.00033; object.scale.set(s,s,s); // important!
 				debugMode && console.log( object ); 
 
 			//	Replace materials.
@@ -813,7 +811,16 @@
 
 
 
+				scene.add( object ); // debug!
 
+				(function update(){
+					requestAnimationFrame( update );
+					object.position.set(
+						localPlayer.controller.center.x,
+						localPlayer.controller.center.y - localPlayer.controller.radius,
+						localPlayer.controller.center.z
+					);
+				})();
 
 			});
 
