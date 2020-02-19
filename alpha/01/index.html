@@ -836,7 +836,7 @@
 				//	CleanUp animation names.
 				var animations = object.animations;
 				animations.forEach( function( clip ){
-					clip.name = clip.name.replace("Armature|", "").replace("MidRiftNoSleeve|", "");
+					clip.name = clip.name.replace("Armature|", "");
 				});
 
 				//	TODO: Create animation droplist to animations tab.
@@ -851,15 +851,14 @@
 				animationController.motion["jump"].setLoop( THREE.LoopOnce, 0 );     // important!
 
 			/*
-					back_flip_to_uppercut,
-					jump, right_turn_90,
-					skinning_test,
-					left_strafe_walking,
-					back_flip_to_uppercut,
-					walking, T-pose, idle,
-					samba_dancing,
+					left_turn_90,
+					samba_dancing, walking,
+					left_strafe_walk,
+					idle, skinning_test,
 					right_strafe_walking,
-					gangnam_style, left_turn_90
+					back_flip_to_uppercut,
+					T-pose, jump, gangnam_style,
+					slide, right_turn_90
 			*/
 
 			//	localPlayer controller motions.
