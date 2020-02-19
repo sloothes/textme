@@ -605,9 +605,9 @@
 
 				//	Player controller.
 
-				playerController = new MW.CharacterController( localPlayer, playerRadius );
-				playerController.movementSpeed = 50;
-				world.add( playerController );
+				localPlayer.controller = new MW.CharacterController( localPlayer, playerRadius );
+				localPlayer.controller.movementSpeed = 50;
+				world.add( localPlayer.controller );
 
 			})();
 
@@ -636,15 +636,15 @@
 			//	bind events.
 
 				keyInputControls.addEventListener( "movekeyon", function () { 
-					playerController.isRunning = true; 
+					localPlayer.controller.isRunning = true; 
 				});
 
 				keyInputControls.addEventListener( "movekeyoff", function () { 
-					playerController.isRunning = false; 
+					localPlayer.controller.isRunning = false; 
 				});
 
 				keyInputControls.addEventListener( "jumpkeypress", function () { 
-					playerController.jump(); 
+					localPlayer.controller.jump(); 
 				});
 
 			// synch with keybord input and camera control input.
@@ -652,7 +652,7 @@
 				keyInputControls.addEventListener( "movekeychange",  function () {
 					var cameraFrontAngle = cameraControls.getFrontAngle();
 					var characterFrontAngle = keyInputControls.frontAngle;
-					playerController.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
+					localPlayer.controller.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
 				});
 
 			/*
@@ -665,7 +665,7 @@
 
 					var cameraFrontAngle = cameraControls.getFrontAngle();
 					var characterFrontAngle = keyInputControls.frontAngle;
-					playerController.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
+					localPlayer.controller.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
 
 				});
 			*/
@@ -705,6 +705,39 @@
 				joystick2  = new virtualInput.Joystick( $( joystickControls2Selector ), 94, { id: "joystick2" } );
 				jumpButton = new virtualInput.Button(   $( joystickControls1Selector ), 58, { id: "jumpButton", label: "<b>JUMP</b>" } ); // buttonSvgSrc
 
+			//	joystick1 and jumpButton events listeners and update on avatar load.
+
+				joystick2.update = function(){
+
+					if ( this.isActive ) {
+
+						cameraControls.setLatLon(
+							cameraControls.lat + this.position.y * 0.5, // deg.
+							cameraControls.lon - this.position.x        // deg.
+						);
+
+						this.dispatchEvent({type:"update"}); // important!
+					}
+				}
+
+				jumpButton.addEventListener( "press", function onPress() { 
+
+					if (  localPlayer.controller.isJumping 
+						|| !localPlayer.controller.isGrounded 
+						|| localPlayer.controller.isOnSlope ) {
+						return;
+					}
+
+					localPlayer.controller.jump();
+				//	define animation play after avatar load.
+
+				});
+
+				(function update(){
+					requestAnimationFrame( update );
+					joystick2.update();
+				})();
+				
 			})();
 
 		</script>
