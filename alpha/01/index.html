@@ -726,7 +726,7 @@
 
 					localPlayer.controller.isRunning = true;
 
-					localPlayer.controller.direction = (3 * Math.PI/2) - cameraControls.getFrontAngle() + this.angle; // important!
+				//	localPlayer.controller.direction = (3 * Math.PI/2) - cameraControls.getFrontAngle() + this.angle; // important!
 
 				});
 
@@ -760,7 +760,7 @@
 
 						localPlayer.controller.direction = (3 * Math.PI/2) - cameraControls.getFrontAngle() + this.angle;
 
-						this.dispatchEvent({type:"update"}); // important!
+					//	this.dispatchEvent({type:"update"}); // important!
 
 					}
 				};
@@ -774,7 +774,7 @@
 							cameraControls.lon - this.position.x        // deg.
 						);
 
-						this.dispatchEvent({type:"update"}); // important!
+					//	this.dispatchEvent({type:"update"}); // important!
 					}
 				}
 
