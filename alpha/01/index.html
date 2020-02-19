@@ -560,8 +560,8 @@
 				var clock = new THREE.Clock();
 
 				(function update(){
-					var delta = clock.getDelta();
 					requestAnimationFrame( update );
+					var delta = clock.getDelta();
 					world.step( Math.min( delta, 0.02 ) );
 				})();
 
@@ -716,6 +716,17 @@
 
 			//	joystick1 and jumpButton events listeners and update on avatar load.
 
+				joystick1.update = function(){
+
+					if ( this.isActive ) {
+
+						localPlayer.controller.direction = (3 * Math.PI/2) - cameraControls.getFrontAngle() + this.angle;
+
+						this.dispatchEvent({type:"update"}); // important!
+
+					}
+				};
+
 				joystick2.update = function(){
 
 					if ( this.isActive ) {
@@ -744,6 +755,7 @@
 
 				(function update(){
 					requestAnimationFrame( update );
+					joystick1.update();
 					joystick2.update();
 				})();
 				
@@ -798,6 +810,7 @@
 
 				//	TODO: Create mesh droplist to avatar tab.
 				//	TODO: Create material droplist to avatar tab.
+				debugMode && console.log( meshes ); 
 
 			//	Animations.
 
@@ -810,19 +823,53 @@
 				//	TODO: Create animation droplist to animations tab.
 
 
+			//	Animation controller.
+
+				animationController = new MW.AnimationController( object );
+				debugMode && console.log( Object.keys( animationController.motion ).join("\n\t") );
+
+			/*
+			//	localPlayer motions.
+				localPlayer.controller.addEventListener( 'startIdling',  function () { animationController.play( 'idle'  ); } );
+				localPlayer.controller.addEventListener( 'startWalking', function () { animationController.play( 'run'   ); } );
+				localPlayer.controller.addEventListener( 'startJumping', function () { animationController.play( 'jump'  ); } );
+				localPlayer.controller.addEventListener( 'startSliding', function () { animationController.play( 'slide' ); } );
+				localPlayer.controller.addEventListener( 'startFalling', function () { animationController.play( 'slide' ); } );
+			*/
+
+
+				var clock = new THREE.Clock();
+
+				(function update(){
+					requestAnimationFrame( update );
+					var delta = clock.getDelta();
+					animationController.update( delta );
+				})();
+
+				debugMode && console.log( animationController ); 
+
+
+			//	KeyInput controls.
+
+
+				
+			//	Joystick controls.
+
+
+
 
 
 				scene.add( object );
 
 				(function update(){
 					requestAnimationFrame( update );
-				//	position.
+					//	position.
 					object.position.set(
 						localPlayer.controller.center.x,
 						localPlayer.controller.center.y - localPlayer.controller.radius,
 						localPlayer.controller.center.z
 					);
-				//	rotation.
+					//	rotation.
 					object.rotation.y = localPlayer.controller.direction + Math.PI; // important!
 				})();
 
