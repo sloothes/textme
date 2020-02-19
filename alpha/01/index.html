@@ -887,15 +887,17 @@
 				animationController.motion["back_flip_to_uppercut"].clampWhenFinished = true;
 
 			/*
-					left_turn_90,
-					samba_dancing,
-					left_strafe_walk,
-					jumping, idle,
-					skinning_test,jump2,
-					right_strafe_walking,
-					run, back_flip_to_uppercut,
-					jump3, jump1, T-pose, walk,
-					jump4, gangnam_style, slide,
+					falling, idling,
+					left_turn_90
+					samba_dancing
+					walking,
+					left_strafe_walk
+					jumping, running,
+					skinning_test
+					right_strafe_walking
+					back_flip_to_uppercut
+					wobbing, T-pose, jump,
+					gangnam_style,
 					right_turn_90
 			*/
 
@@ -907,7 +909,7 @@
 				localPlayer.controller.addEventListener( "startFalling", function () { animationController.play( "falling" ); });
 				localPlayer.controller.addEventListener( "startJumping", function () { animationController.play( "jump" ); });
 
-				animationController.play( "idle" ); 
+				animationController.play( "idling" ); 
 
 				var clock = new THREE.Clock();
 
