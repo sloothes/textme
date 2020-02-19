@@ -62,7 +62,7 @@ function createSidePanel(){
 	var sidePanel = document.createElement("div");
 	sidePanel.id = "side-panel";
 	sidePanel.classList.add("side-panel", "pinned");
-	sidePanel.style.cssText = "position:absolute;top:0;right:0;bottom:0;width:370px;background:rgba(255,255,255,0.8);"
+	sidePanel.style.cssText = "position:absolute;top:0;right:0;bottom:0;width:370px;background:rgba(255,255,255,0.9);"
 		+ " -webkit-transform:translateX(0px); -webkit-transition:-webkit-transform 500ms ease-out; z-index:9999;";
 
 	var container = document.createElement("div");

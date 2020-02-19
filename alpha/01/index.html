@@ -439,6 +439,8 @@
 
 		<script>
 
+			MW.install( THREE ); // important!
+
 		//	Scene.
 
 			scene = new THREE.Scene();
@@ -457,6 +459,17 @@
 				});
 
 			})();
+
+	/*
+		//	Editor Controls.
+
+			(function(){
+				controls = new THREE.EditorControls(camera);
+				if ( controls && controls instanceof THREE.EditorControls ) {
+					camera.lookAt(controls.center); // important!
+				}
+			})();
+	*/
 
 		//  Camera Light.
 
@@ -510,29 +523,184 @@
 					mouse.y = ( e.clientY - (renderer.domElement.height * 0.5) );
 				});
 
+
+				(function render(){
+					requestAnimationFrame( render );
+					renderer.render( scene, camera );
+				})();
+
 			})();
 
-		//	Ground Helper.
+		//	World - Octree.
 
 			(function(){
 
+				world = new MW.World();
+
+				var min = new THREE.Vector3( -1500, -1500, -1500 );
+				var max = new THREE.Vector3(  1500,  1500,  1500 );
+				var partition = 5;
+
+				octree = new MW.Octree( min, max, partition );
+				world.add( octree );
+
+				var clock = new THREE.Clock();
+
+				(function update(){
+					var delta = clock.getDelta();
+					requestAnimationFrame( update );
+					world.step( Math.min( delta, 0.02 ) );
+				})();
+
+			})();
+
+		//	ground.js
+
+			(function(){
+
+				var ground = new THREE.Mesh(
+					new THREE.PlaneGeometry( 3000, 3000, 1, 1 ),
+					new THREE.MeshLambertMaterial({ 
+						opacity:1, 
+						color:0x829ec4,
+					})
+				);
+
+			//	We need only the geometry of the ground
+			//	so there is not need to add to the scene.
+				ground.rotation.x = -Math.PI / 2; // THREE.Math.degToRad( -90 );
+				octree.importThreeMesh( ground ); // important!
+
+			//	Ground Helper.
 				groundHelper = new THREE.GridHelper( 3000, 300, 0x444444, 0x444444 );
 				scene.add( groundHelper );
 
 			})();
 
+		//	localPlayer Controller.
 
-	/*
-		//	Editor Controls.
 			(function(){
-				controls = new THREE.EditorControls(camera);
-				if ( controls && controls instanceof THREE.EditorControls ) {
-					camera.lookAt(controls.center); // important!
-				}
+
+				var playerRadius = 10;
+				localPlayer = new THREE.Object3D();
+				localPlayer.position.set( 0, 10, 0 );
+				scene.add( localPlayer );
+
+				//	Player helper.
+
+				var sphere = new THREE.Mesh(
+					new THREE.SphereGeometry( playerRadius, 8, 6 ),
+					new THREE.MeshBasicMaterial( { color: 0xff0000,  wireframe: true} )
+				);
+
+				localPlayer.add( sphere );
+
+				//	Player controller.
+
+				playerController = new MW.CharacterController( localPlayer, playerRadius );
+				playerController.movementSpeed = 50;
+				world.add( playerController );
+
 			})();
-	*/
+
+		//	cameraControls, keyInputControls.
+
+			(function(){
+
+				keyInputControls = new MW.KeyInputControl();
+
+				cameraControls = new MW.TPSCameraControl(
+
+					camera, 			// three.js camera.
+					playerObjectHolder,	// tracking object.
+
+					{
+						el: renderer.domElement,
+						offset: new THREE.Vector3( 0, 0, 0 ), // eye height.
+						radius: 34, // default distance of the character to the camera.
+						minRadius: 1,
+						maxRadius: 280,
+						rigidObjects: []
+					}
+
+				);
+
+			//	bind events.
+
+				keyInputControls.addEventListener( "movekeyon", function () { 
+					playerController.isRunning = true; 
+				});
+
+				keyInputControls.addEventListener( "movekeyoff", function () { 
+					playerController.isRunning = false; 
+				});
+
+				keyInputControls.addEventListener( "jumpkeypress", function () { 
+					playerController.jump(); 
+				});
+
+			// synch with keybord input and camera control input.
+
+				keyInputControls.addEventListener( "movekeychange",  function () {
+					var cameraFrontAngle = cameraControls.getFrontAngle();
+					var characterFrontAngle = keyInputControls.frontAngle;
+					playerController.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
+				});
+
+			/*
+			//	"updated" event is fired by "cameraControls.update()"
+				cameraControls.addEventListener( "updated", function () {
+
+				//	it updates character front angle with the camera view.
+				//  We want camera independed from character front angle,
+				//	so we keep it disactivated. Maybe used somewhere later.
+
+					var cameraFrontAngle = cameraControls.getFrontAngle();
+					var characterFrontAngle = keyInputControls.frontAngle;
+					playerController.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
+
+				});
+			*/
+
+				(function update(){
+					requestAnimationFrame( update );
+					cameraControls.update();
+				})();
+
+			})();
+
+		//	joystickControls.
+
+			(function(){
+
+				var joystick1, joystick2;
+
+				var joysticControls1 = document.createElement( "div" );
+				joysticControls1.id = "joystick-controls-1";
+				joysticControls1.classList.add("joystick-controls");
+				$( joysticControls1 ).appendTo( document.body );
+
+				var joysticControls2 = document.createElement( "div" );
+				joysticControls2.id = "joystick-controls-2";
+				joysticControls2.classList.add("joystick-controls");
+				$( joysticControls2 ).appendTo( document.body );
+
+				var joystick1Selector  = "#joystick1";
+				var joystick2Selector  = "#joystick2";
+				var jumpButtonSelector = "#jumpButton";
+
+				var joystickControlsSelector  = ".joystick-controls";
+				var joystickControls1Selector = "#joystick-controls-1";
+				var joystickControls2Selector = "#joystick-controls-2";
+
+				joystick1  = new virtualInput.Joystick( $( joystickControls1Selector ), 94, { id: "joystick1" } );
+				joystick2  = new virtualInput.Joystick( $( joystickControls2Selector ), 94, { id: "joystick2" } );
+				jumpButton = new virtualInput.Button(   $( joystickControls1Selector ), 58, { id: "jumpButton", label: "<b>JUMP</b>" } ); // buttonSvgSrc
+
+			})();
 
 		</script>
+
 
 		<script>
 
