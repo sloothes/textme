@@ -452,9 +452,17 @@
 				var loader = new THREE.FBXLoader();
 				loader.load( url, function( object ){
 
+				//	object is THREE.Group.
 					object.name = "TextMeGirlv2";
 					var s = 1; object.scale.set(s,s,s); // important!
-					
+					debugMode && console.log( object ); 
+
+				//	Collect skinned meshes.
+					var meshes = object.children.filter( function( item ){
+						return item.type === "SkinnedMesh";
+					});
+
+				//	Replace materials.
 					object.children.forEach( function( child ){
 
 						if ( child.type !== "SkinnedMesh" ) return;
@@ -476,12 +484,13 @@
 
 						}
 
-						debugMode && console.log( child ); 
+						debugMode && console.log( child.material ); 
 					});
 
-					debugMode && console.log( object ); // object is THREE.Group.
 
+				//	Animations.
 
+					var animations = object.animations;
 
 
 
