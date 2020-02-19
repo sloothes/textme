@@ -678,12 +678,12 @@
 				var joysticControls1 = document.createElement( "div" );
 				joysticControls1.id = "joystick-controls-1";
 				joysticControls1.classList.add("joystick-controls");
-				$( joysticControls1 ).appendTo( document.body );
+				document.body.appendChild( joysticControls1 );
 
 				var joysticControls2 = document.createElement( "div" );
 				joysticControls2.id = "joystick-controls-2";
 				joysticControls2.classList.add("joystick-controls");
-				$( joysticControls2 ).appendTo( document.body );
+				document.body.appendChild( joysticControls2 );
 
 				var joystick1Selector  = "#joystick1";
 				var joystick2Selector  = "#joystick2";
