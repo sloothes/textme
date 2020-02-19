@@ -459,7 +459,7 @@
 
 				var aspect = window.innerWidth / window.innerHeight;
 				camera = new THREE.PerspectiveCamera( 50, aspect, 1, 10000 );
-				camera.position.set(0, 20, 0);
+				camera.position.set(0, 20, 50);
 
 				window.addEventListener("resize", function onWindowResize() {
 					camera.aspect = window.innerWidth / window.innerHeight;
@@ -500,6 +500,11 @@
 				shadowHelper.visible = false;
 
 				scene.add( cameraLight, shadowHelper  );
+
+				(function update(){
+					requestAnimationFrame( update );
+					cameraLight.position.copy( camera.position );
+				})();
 
 			})();
 
@@ -594,7 +599,7 @@
 				localPlayer.position.set( 0, 10, 0 );
 				scene.add( localPlayer );
 
-				//	Player helper.
+			//	Player helper.
 
 				var sphere = new THREE.Mesh(
 					new THREE.SphereGeometry( playerRadius, 8, 6 ),
@@ -603,11 +608,14 @@
 
 				localPlayer.add( sphere );
 
-				//	Player controller.
+			//	Player controller.
 
 				localPlayer.controller = new MW.CharacterController( localPlayer, playerRadius );
 				localPlayer.controller.movementSpeed = 50;
 				world.add( localPlayer.controller );
+
+			//	CameraLight target.
+				cameraLight.target = localPlayer;
 
 			})();
 
@@ -751,6 +759,8 @@
 			var loader = new THREE.FBXLoader();
 			loader.load( url, function( object ){
 
+				fbx = object; // debug!
+
 			//	object is THREE.Group.
 				object.name = "TextMeGirlv2";
 				var s = 1; object.scale.set(s,s,s); // important!
@@ -799,7 +809,6 @@
 				});
 
 				//	TODO: Create animation droplist to animations tab.
-
 
 
 
