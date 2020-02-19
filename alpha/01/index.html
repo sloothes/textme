@@ -101,12 +101,12 @@
 				var loginTab = TabUI.add( "Login", "login-tab" );
 				var avatarTab = TabUI.add( "Avatar", "avatar-tab" );
 				var textmeTab = TabUI.add( "TextMe", "textme-tab" );
-				var mobileTab = TabUI.add( "Mobile", "mobile-tab" );
 				var controlTab = TabUI.add( "Control", "control-tab" );
-				var controlTab = TabUI.add( "Settings", "settings-tab" );
+				var settingsTab = TabUI.add( "Settings", "settings-tab" );
+				var animationTab = TabUI.add( "Animation", "mobile-tab" );
 
 				document.body.appendChild( sidePanel );
-				TabUI.append("TextMe", "Avatar", "Mobile", "Control", "Login", "Settings" );
+				TabUI.append("TextMe", "Avatar", "Animation", "Control", "Login", "Settings" );
 				TabUI.TextMe.role.classList.add("active");
 				TabUI.TextMe.tab.classList.add("in","active");
 
@@ -356,10 +356,18 @@
 					return salt;
 				}
 
+			//	Subscription must not be "on connect" because
+			//	when we have timeout disconnection and user reconnected
+			//	automatic again, we have multiple subscriptions and we
+			//	sent multiple times the message. So when we make subscription?
+
+			//	On connect.
 				socket.on("connect", function (status) {
 					debugMode && console.log( "socket.id:", socket.id );
+				});
 
-				//	Subscribe.
+			//	Subscribe.
+				setTimeout( function(){
 
 					var chatChannel = socket.subscribe( channelName, { batch: true } );
 					debugMode && console.log("chatChannel:", chatChannel);
@@ -385,13 +393,17 @@
 				//  Watch chat channel.
 
 					chatChannel.watch( function( data ){
-						debugMode && console.log( "message received:", data );
+
+						if ( data.sccid !== socket.id ) {
+							debugMode && console.log( "received:", data );
+						}
 
 						if ( !(data && data.message) ) return;
 						if ( !data.sccid ) data.username = "system";
 						if ( !data.username ) data.username = data.sccid;
 
 						var options = {};
+
 						if ( data.sccid === socket.id ) {
 							options.color = "#fff";
 							options.background = "#0a7ada";
@@ -404,23 +416,23 @@
 
 						var pill = TabUI.TextMe.pill.parentElement;
 						if ( !pill.classList.contains("active") ) {
+						//	the easy way:
 							pill.click(); // important!
-						//	altenate:
+						}
+
+						//	the hard way:
 						//	remove class "active", from all roles,
 						//	remove class "active", "in" from tabs,
 						//	add class "active" to TextMe.role, and
 						//	add class "in", "active" to TextMe.tab.
-						}
 
 						setTimeout( displayMessage, 250, data, options );
-
 					});
 
 				//	On disconnect.
-
-					socket.on("disconnect", function(){
-						socket.unsubscribe( channelName );
-					});
+				//	socket.on("disconnect", function(){
+				//		socket.unsubscribe( channelName ); // same as above.
+				//	});
 
 				});
 
@@ -457,11 +469,6 @@
 					var s = 1; object.scale.set(s,s,s); // important!
 					debugMode && console.log( object ); 
 
-				//	Collect skinned meshes.
-					var meshes = object.children.filter( function( item ){
-						return item.type === "SkinnedMesh";
-					});
-
 				//	Replace materials.
 					object.children.forEach( function( child ){
 
@@ -487,6 +494,11 @@
 						debugMode && console.log( child.material ); 
 					});
 
+
+				//	Collect skinned meshes.
+					var meshes = object.children.filter( function( item ){
+						return item.type === "SkinnedMesh";
+					});
 
 				//	Animations.
 
