@@ -787,7 +787,7 @@
 
 		//	Avatar loader.
 
-			var url = "/textme/fbx/TextMeGirlv2_FreeTestPack.fbx";
+			var url = "fbx/TextMeGirlv2_FreeTestPack.fbx";
 			var loader = new THREE.FBXLoader();
 			loader.load( url, function( object ){
 
@@ -856,6 +856,10 @@
 				debugMode && console.log( "\t"+ Object.keys( animationController.motion ).join("\n\t") );
 				
 				animationController.motion["jump"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["jump1"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["jump2"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["jump3"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["jump4"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["T-pose"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["left_turn_90"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["right_turn_90"].setLoop( THREE.LoopOnce, 0 );
@@ -863,6 +867,10 @@
 				animationController.motion["back_flip_to_uppercut"].setLoop( THREE.LoopOnce, 0 );
 
 				animationController.motion["jump"].clampWhenFinished = true;
+				animationController.motion["jump1"].clampWhenFinished = true;
+				animationController.motion["jump2"].clampWhenFinished = true;
+				animationController.motion["jump3"].clampWhenFinished = true;
+				animationController.motion["jump4"].clampWhenFinished = true;
 				animationController.motion["T-pose"].clampWhenFinished = true;
 				animationController.motion["left_turn_90"].clampWhenFinished = true;
 				animationController.motion["right_turn_90"].clampWhenFinished = true;
@@ -888,7 +896,7 @@
 				});
 
 				localPlayer.controller.addEventListener( "startWalking",  function () { 
-					animationController.play( "walking" ); 
+					animationController.play( "run" ); 
 				});
 
 				localPlayer.controller.addEventListener( "startSliding", function () { 
@@ -900,7 +908,7 @@
 				});
 
 				localPlayer.controller.addEventListener( "startJumping", function () { 
-					animationController.play( "T-pose" );
+					animationController.play( "jump1" );
 				});
 
 				var clock = new THREE.Clock();
