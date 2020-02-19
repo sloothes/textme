@@ -831,6 +831,13 @@
 				//	TODO: Create material droplist to avatar tab.
 				debugMode && console.log( meshes ); 
 
+
+			//	Add to scene.
+
+				scene.add( object );
+				localPlayer.controller.direction += Math.PI;
+
+
 			//	Animations.
 
 				//	CleanUp animation names.
@@ -893,7 +900,7 @@
 
 				localPlayer.controller.addEventListener( "startJumping", function () { 
 					animationController.play( "jump" );
-				//	animationController.motion["jump"].reset(); // important!
+					animationController.motion.jump.reset();
 				});
 
 				var clock = new THREE.Clock();
@@ -905,11 +912,6 @@
 				})();
 
 				debugMode && console.log( animationController ); 
-
-			//	Add to scene.
-
-				scene.add( object );
-				localPlayer.controller.direction += Math.PI;
 
 			//	Update avatar.
 
