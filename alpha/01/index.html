@@ -900,8 +900,8 @@
 				});
 
 				localPlayer.controller.addEventListener( "startJumping", function () { 
-					animationController.play( "jump" );
-					animationController.motion.jump.reset();
+					animationController.mixer.stopAllAction();
+					animationController.motion.jump.play();
 				});
 
 				var clock = new THREE.Clock();
