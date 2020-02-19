@@ -208,9 +208,6 @@
 
 					});
 
-				//	Prevent editor to delete objects.
-				//	input.addEventListener( "keydown", preventEditorPropagation, false );
-
 					row.appendChild( input );
 
 					return row;
@@ -436,21 +433,104 @@
 
 				});
 
-				function preventEditorPropagation( event ) {
+			})();
 
-					event.stopPropagation(); // important!
+		</script>
 
-				//	Little paranoid safety.
-					switch ( event.keyCode ) {
-						case 8: // backspace.
-						case 46: // delete.
-							event.stopPropagation(); // prevent editor to delete object. important!
-						break;
-					}
+		<script>
 
-				}
+		//	Scene.
+
+			scene = new THREE.Scene();
+
+		//	Camera.
+
+			(function(){
+
+				var aspect = window.innerWidth / window.innerHeight;
+				camera = new THREE.PerspectiveCamera( 50, aspect, 1, 10000 );
+				camera.position.set(0, 20, 0);
+
+				window.addEventListener("resize", function onWindowResize() {
+					camera.aspect = window.innerWidth / window.innerHeight;
+					camera.updateProjectionMatrix();
+				});
 
 			})();
+
+		//  Camera Light.
+
+			(function(){
+
+				cameraLight = new THREE.DirectionalLight( 0xdfebff, 0.75 );
+				cameraLight.position.set( 0, 500, 300 );
+				cameraLight.castShadow = true;
+				cameraLight.shadow.mapSize.width  = Math.pow(2, 10); // 2048;
+				cameraLight.shadow.mapSize.height = Math.pow(2, 10); // 2048;
+
+				var d = 30;
+				cameraLight.shadow.camera.left = - d;
+				cameraLight.shadow.camera.right = d;
+				cameraLight.shadow.camera.top = d;
+				cameraLight.shadow.camera.bottom = - d;
+				cameraLight.shadow.camera.far = 10000;
+
+				shadowHelper = new THREE.CameraHelper(cameraLight.shadow.camera);
+				shadowHelper.visible = false;
+
+				scene.add( cameraLight, shadowHelper  );
+
+			})();
+
+		//  Renderer.
+
+			(function(){
+
+				renderer = new THREE.WebGLRenderer({
+					antialias: true,
+					preserveDrawingBuffer: true,
+				});
+
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+				renderer.shadowMap.enabled = true;
+				renderer.setClearColor( scene.fog.color );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				window.addEventListener("resize", function onWindowResize() {
+					renderer.setSize( window.innerWidth, window.innerHeight );
+				});
+
+				mouse = new THREE.Vector2();
+
+				renderer.domElement.addEventListener("mousemove", function onMouseMove(e) {
+					mouse.x = ( e.clientX - (renderer.domElement.width * 0.5) );
+					mouse.y = ( e.clientY - (renderer.domElement.height * 0.5) );
+				});
+
+			})();
+
+		//	Ground Helper.
+
+			(function(){
+
+				groundHelper = new THREE.GridHelper( 3000, 300, 0x444444, 0x444444 );
+				scene.add( groundHelper );
+
+			})();
+
+
+	/*
+		//	Editor Controls.
+			(function(){
+				controls = new THREE.EditorControls(camera);
+				if ( controls && controls instanceof THREE.EditorControls ) {
+					camera.lookAt(controls.center); // important!
+				}
+			})();
+	*/
 
 		</script>
 
@@ -458,66 +538,66 @@
 
 		//	Avatar loader.
 
-			(function(){
+			var url = "/textme/fbx/TextMeGirlv2_FreeTestPack.fbx";
+			var loader = new THREE.FBXLoader();
+			loader.load( url, function( object ){
 
-				var url = "/textme/fbx/TextMeGirlv2_FreeTestPack.fbx";
-				var loader = new THREE.FBXLoader();
-				loader.load( url, function( object ){
+			//	object is THREE.Group.
+				object.name = "TextMeGirlv2";
+				var s = 1; object.scale.set(s,s,s); // important!
+				debugMode && console.log( object ); 
 
-				//	object is THREE.Group.
-					object.name = "TextMeGirlv2";
-					var s = 1; object.scale.set(s,s,s); // important!
-					debugMode && console.log( object ); 
+			//	Replace materials.
+				object.children.forEach( function( child ){
 
-				//	Replace materials.
-					object.children.forEach( function( child ){
+					if ( child.type !== "SkinnedMesh" ) return;
 
-						if ( child.type !== "SkinnedMesh" ) return;
-						
-						if ( Array.isArray(child.material) ) {
-							child.material = child.material.map( function( item ){
-								var name = item.name;
-								return new THREE.MeshStandardMaterial({
-									name:name, skinning:true,
-								});
-							});
-
-						} else {
-
-							var name = child.material.name;
-							child.material = new THREE.MeshStandardMaterial({
+					if ( Array.isArray(child.material) ) {
+						child.material = child.material.map( function( item ){
+							var name = item.name;
+							return new THREE.MeshStandardMaterial({
 								name:name, skinning:true,
 							});
+						});
 
-						}
+					} else {
 
-						debugMode && console.log( child.material ); 
-					});
+						var name = child.material.name;
+						child.material = new THREE.MeshStandardMaterial({
+							name:name, skinning:true,
+						});
 
+					}
 
-				//	Collect skinned meshes.
-					var meshes = object.children.filter( function( item ){
-						return item.type === "SkinnedMesh";
-					});
-
-				//	Animations.
-
-					var animations = object.animations;
-
-
-
-
-
-
-
-
-
-
-
-
+					debugMode && console.log( child.material ); 
 				});
 
-			})();
+
+			//	Collect skinned meshes.
+				var meshes = object.children.filter( function( item ){
+					return item.type === "SkinnedMesh";
+				});
+
+				//	TODO: Create mesh droplist to avatar tab.
+				//	TODO: Create material droplist to avatar tab.
+
+			//	Animations.
+
+				//	CleanUp animation names.
+				var animations = object.animations;
+				animations.forEach( function( clip ){
+					clip.name = clip.name.replace("Armature|", "");
+				});
+
+				//	TODO: Create animation droplist to animations tab.
+
+
+
+
+
+
+
+			});
 
 		</script>
 
