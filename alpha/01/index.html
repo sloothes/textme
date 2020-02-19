@@ -729,6 +729,7 @@
 					if ( localPlayer.controller.isRunning ) {
 
 					//	localPlayer.outfit.AnimationsHandler.stop();
+					//	localPlayer.controller.isRunning = true;
 						localPlayer.controller.movementSpeed = 50;
 					//	localPlayer.outfit.AnimationsHandler.play("run");
 
@@ -744,10 +745,23 @@
 					}
 
 				//	localPlayer.outfit.AnimationsHandler.stop();
-					localPlayer.controller.isRunning = false;
+				//	localPlayer.controller.isRunning = false;
 					localPlayer.controller.movementSpeed = 0;
 				//	localPlayer.outfit.AnimationsHandler.play("idle");
 					localPlayer.controller.dispatchEvent({type:"startIdling"});
+
+				});
+
+				jumpButton.addEventListener( "press", function onPress() { 
+
+					if (  localPlayer.controller.isJumping 
+						|| !localPlayer.controller.isGrounded 
+						|| localPlayer.controller.isOnSlope ) {
+						return;
+					}
+
+					localPlayer.controller.jump();
+				//	define animation play after avatar load.
 
 				});
 
@@ -775,18 +789,6 @@
 					}
 				}
 
-				jumpButton.addEventListener( "press", function onPress() { 
-
-					if (  localPlayer.controller.isJumping 
-						|| !localPlayer.controller.isGrounded 
-						|| localPlayer.controller.isOnSlope ) {
-						return;
-					}
-
-					localPlayer.controller.jump();
-				//	define animation play after avatar load.
-
-				});
 
 				(function update(){
 					requestAnimationFrame( update );
