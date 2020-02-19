@@ -454,12 +454,32 @@
 
 					object.name = "TextMeGirlv2";
 					var s = 1; object.scale.set(s,s,s); // important!
+					
+					object.children.forEach( function( child ){
+
+						if ( child.type !== "SkinnedMesh" ) return;
+						
+						if ( Array.isArray(child.material) ) {
+							child.material = child.material.map( function( item ){
+								var name = item.name;
+								return new THREE.MeshStandardMaterial({
+									name:name, skinning:true,
+								});
+							});
+
+						} else {
+
+							var name = child.material.name;
+							child.material = new THREE.MeshStandardMaterial({
+								name:name, skinning:true,
+							});
+
+						}
+
+						debugMode && console.log( child ); 
+					});
 
 					debugMode && console.log( object ); // object is THREE.Group.
-
-
-
-
 
 
 
