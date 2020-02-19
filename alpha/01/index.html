@@ -833,7 +833,7 @@
 
 
 			//	Add object to scene.
-			//	"object" must added before animations.
+			//	"object" must be add before animations.
 
 				scene.add( object );
 				localPlayer.controller.direction += Math.PI;
@@ -925,6 +925,8 @@
 				localPlayer.controller.addEventListener( "startJumping", function () { 
 					animationController.play( "jump2" );
 				});
+
+				animationController.play( "idle" ); 
 
 				var clock = new THREE.Clock();
 
