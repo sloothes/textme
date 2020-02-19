@@ -855,23 +855,23 @@
 				animationController = new MW.AnimationController( object );
 				debugMode && console.log( "\t"+ Object.keys( animationController.motion ).join("\n\t") );
 				
-				animationController.motion["jump"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["jump1"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["jump2"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["jump3"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["jump4"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["T-pose"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["jumping"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["left_turn_90"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["right_turn_90"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["skinning_test"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["back_flip_to_uppercut"].setLoop( THREE.LoopOnce, 0 );
 
-				animationController.motion["jump"].clampWhenFinished = true;
 				animationController.motion["jump1"].clampWhenFinished = true;
 				animationController.motion["jump2"].clampWhenFinished = true;
 				animationController.motion["jump3"].clampWhenFinished = true;
 				animationController.motion["jump4"].clampWhenFinished = true;
 				animationController.motion["T-pose"].clampWhenFinished = true;
+				animationController.motion["jumping"].clampWhenFinished = true;
 				animationController.motion["left_turn_90"].clampWhenFinished = true;
 				animationController.motion["right_turn_90"].clampWhenFinished = true;
 				animationController.motion["skinning_test"].clampWhenFinished = true;
@@ -879,14 +879,15 @@
 
 			/*
 					left_turn_90,
-					samba_dancing, 
-					walking, 
+					samba_dancing,
 					left_strafe_walk,
-					idle, skinning_test,
+					jumping, idle,
+					skinning_test,jump2,
 					right_strafe_walking,
-					back_flip_to_uppercut,
-					T-pose, jump, gangnam_style,
-					slide, right_turn_90
+					run, back_flip_to_uppercut,
+					jump3, jump1, T-pose, walk,
+					jump4, gangnam_style, slide,
+					right_turn_90
 			*/
 
 			//	localPlayer controller motions.
