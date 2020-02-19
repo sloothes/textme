@@ -838,6 +838,20 @@
 				scene.add( object );
 				localPlayer.controller.direction += Math.PI;
 
+			//	Update avatar.
+
+				(function update(){
+					requestAnimationFrame( update );
+					//	position.
+					object.position.set(
+						localPlayer.controller.center.x,
+						localPlayer.controller.center.y - localPlayer.controller.radius,
+						localPlayer.controller.center.z
+					);
+					//	rotation.
+					object.rotation.y = localPlayer.controller.direction + Math.PI; // important!
+				})();
+
 
 			//	Animations.
 
@@ -921,20 +935,6 @@
 				})();
 
 				debugMode && console.log( animationController ); 
-
-			//	Update avatar.
-
-				(function update(){
-					requestAnimationFrame( update );
-					//	position.
-					object.position.set(
-						localPlayer.controller.center.x,
-						localPlayer.controller.center.y - localPlayer.controller.radius,
-						localPlayer.controller.center.z
-					);
-					//	rotation.
-					object.rotation.y = localPlayer.controller.direction + Math.PI; // important!
-				})();
 
 			});
 
