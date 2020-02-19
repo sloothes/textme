@@ -442,5 +442,43 @@
 
 		</script>
 
+		<script>
+
+		//	Avatar loader.
+
+			(function(){
+
+				var url = "/textme/fbx/TextMeGirlv2_FreeTestPack.fbx";
+				var loader = new THREE.FBXLoader();
+				loader.load( url, function( object ){
+
+					object.name = "TextMeGirlv2";
+					var s = 1; object.scale.set(s,s,s); // important!
+
+					debugMode && console.log( object ); // object is THREE.Group.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				});
+
+			})();
+
+		</script>
+
 	</body>
 </html>
