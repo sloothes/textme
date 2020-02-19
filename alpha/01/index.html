@@ -716,6 +716,41 @@
 
 			//	joystick1 and jumpButton events listeners and update on avatar load.
 
+				joystick1.addEventListener( "active", function onActive() { 
+
+					if (  localPlayer.controller.isJumping 
+						|| !localPlayer.controller.isGrounded 
+						|| localPlayer.controller.isOnSlope ) {
+						return;
+					}
+
+					localPlayer.controller.direction = (3 * Math.PI/2) - cameraControls.getFrontAngle() + this.angle; // important!
+
+					if ( localPlayer.controller.isRunning ) {
+
+					//	localPlayer.outfit.AnimationsHandler.stop();
+						localPlayer.controller.movementSpeed = 50;
+					//	localPlayer.outfit.AnimationsHandler.play("run");
+
+					}
+				});
+
+				joystick1.addEventListener( "disactive", function onDisactive() { 
+
+					if (  localPlayer.controller.isJumping 
+						|| !localPlayer.controller.isGrounded 
+						||  localPlayer.controller.isOnSlope ) {
+						return;
+					}
+
+				//	localPlayer.outfit.AnimationsHandler.stop();
+					localPlayer.controller.isRunning = false;
+					localPlayer.controller.movementSpeed = 0;
+				//	localPlayer.outfit.AnimationsHandler.play("idle");
+					localPlayer.controller.dispatchEvent({type:"startIdling"});
+
+				});
+
 				joystick1.update = function(){
 
 					if ( this.isActive ) {
