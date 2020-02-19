@@ -847,12 +847,24 @@
 				animationController = new MW.AnimationController( object );
 				debugMode && console.log( "\t"+ Object.keys( animationController.motion ).join("\n\t") );
 				
-				animationController.motion["jump"].clampWhenFinished = true;         // important!
-				animationController.motion["jump"].setLoop( THREE.LoopOnce, 0 );     // important!
+				animationController.motion["jump"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["T-pose"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["left_turn_90"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["right_turn_90"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["skinning_test"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["back_flip_to_uppercut"].setLoop( THREE.LoopOnce, 0 );
+
+				animationController.motion["jump"].clampWhenFinished = true;
+				animationController.motion["T-pose"].clampWhenFinished = true;
+				animationController.motion["left_turn_90"].clampWhenFinished = true;
+				animationController.motion["right_turn_90"].clampWhenFinished = true;
+				animationController.motion["skinning_test"].clampWhenFinished = true;
+				animationController.motion["back_flip_to_uppercut"].clampWhenFinished = true;
 
 			/*
 					left_turn_90,
-					samba_dancing, walking,
+					samba_dancing, 
+					walking, 
 					left_strafe_walk,
 					idle, skinning_test,
 					right_strafe_walking,
@@ -881,7 +893,7 @@
 
 				localPlayer.controller.addEventListener( "startJumping", function () { 
 					animationController.play( "jump" );
-					animationController.motion["jump"].reset(); // important!
+				//	animationController.motion["jump"].reset(); // important!
 				});
 
 				var clock = new THREE.Clock();
