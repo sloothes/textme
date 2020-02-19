@@ -714,7 +714,7 @@
 				joystick2  = new virtualInput.Joystick( $( joystickControls2Selector ), 94, { id: "joystick2" } );
 				jumpButton = new virtualInput.Button(   $( joystickControls1Selector ), 58, { id: "jumpButton", label: "<b>JUMP</b>" } ); // buttonSvgSrc
 
-			//	joystick1 and jumpButton events listeners and update on avatar load.
+			//	define animations after animationCotroller has been created.
 
 				joystick1.addEventListener( "active", function onActive() { 
 
@@ -724,16 +724,10 @@
 						return;
 					}
 
+					localPlayer.controller.isRunning = true;
+
 					localPlayer.controller.direction = (3 * Math.PI/2) - cameraControls.getFrontAngle() + this.angle; // important!
 
-					if ( localPlayer.controller.isRunning ) {
-
-					//	localPlayer.outfit.AnimationsHandler.stop();
-					//	localPlayer.controller.isRunning = true;
-						localPlayer.controller.movementSpeed = 50;
-					//	localPlayer.outfit.AnimationsHandler.play("run");
-
-					}
 				});
 
 				joystick1.addEventListener( "disactive", function onDisactive() { 
@@ -744,11 +738,7 @@
 						return;
 					}
 
-				//	localPlayer.outfit.AnimationsHandler.stop();
-				//	localPlayer.controller.isRunning = false;
-					localPlayer.controller.movementSpeed = 0;
-				//	localPlayer.outfit.AnimationsHandler.play("idle");
-					localPlayer.controller.dispatchEvent({type:"startIdling"});
+					localPlayer.controller.isRunning = false;
 
 				});
 
@@ -761,7 +751,6 @@
 					}
 
 					localPlayer.controller.jump();
-				//	define animation play after avatar load.
 
 				});
 
