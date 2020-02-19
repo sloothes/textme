@@ -900,8 +900,7 @@
 				});
 
 				localPlayer.controller.addEventListener( "startJumping", function () { 
-					animationController.mixer.stopAllAction();
-					animationController.motion.jump.play();
+					animationController.play( "T-pose" );
 				});
 
 				var clock = new THREE.Clock();
