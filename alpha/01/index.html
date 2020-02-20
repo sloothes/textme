@@ -880,17 +880,18 @@
 				animationController.motion["skinning_test"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["back_flip_to_uppercut"].setLoop( THREE.LoopOnce, 0 );
 
-				animationController.motion["jump"].clampWhenFinished = true;
-				animationController.motion["T-pose"].clampWhenFinished = true;
-				animationController.motion["jumping"].clampWhenFinished = true;
-				animationController.motion["left_turn_90"].clampWhenFinished = true;
-				animationController.motion["right_turn_90"].clampWhenFinished = true;
-				animationController.motion["skinning_test"].clampWhenFinished = true;
-				animationController.motion["back_flip_to_uppercut"].clampWhenFinished = true;
+			//	animationController.motion["jump"].clampWhenFinished = true;
+			//	animationController.motion["T-pose"].clampWhenFinished = true;
+			//	animationController.motion["jumping"].clampWhenFinished = true;
+			//	animationController.motion["left_turn_90"].clampWhenFinished = true;
+			//	animationController.motion["right_turn_90"].clampWhenFinished = true;
+			//	animationController.motion["skinning_test"].clampWhenFinished = true;
+			//	animationController.motion["back_flip_to_uppercut"].clampWhenFinished = true;
+
+				animationController.motion.jumping.timeScale = 1.5; // hack.
 
 			//	All these will play with .reset();
 				animationController.play( "jumping" ); // hack.
-				animationController.motion.jumping.timeScale = 1.5; // hack.
 
 			/*
 					falling, idling, left_turn_90, samba_dancing, walking, left_strafe_walk,
@@ -938,7 +939,6 @@
 				localPlayer.controller.addEventListener( "startWalking", function () { animationController.play( "running" ); });
 				localPlayer.controller.addEventListener( "startSliding", function () { animationController.play( "falling" ); });
 				localPlayer.controller.addEventListener( "startFalling", function () { animationController.play( "falling" ); });
-			//
 				localPlayer.controller.addEventListener( "startJumping", function () { animationController.motion.jumping.reset(); });
 
 				/*
