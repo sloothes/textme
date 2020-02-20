@@ -901,13 +901,45 @@
 					right_turn_90
 			*/
 
+				localPlayer.controller.addEventListener( "startJumping", function () { 
+					for (var name in animationController.motion ) {
+						animationController.motion[ name ].weight = 0;
+					}
+					animationController.motion.jumping.weight = 1; 
+
+				});
+
+				localPlayer.controller.addEventListener( "endJumping", function () { 
+					for (var name in animationController.motion ) {
+						animationController.motion[ name ].weight = 1;
+					}
+					animationController.motion.jumping.weight = 0; 
+				});
+
 			//	localPlayer controller motions.
 
 				localPlayer.controller.addEventListener( "startIdling",  function () { animationController.play( "idling"  ); });
 				localPlayer.controller.addEventListener( "startWalking", function () { animationController.play( "running" ); });
+				localPlayer.controller.addEventListener( "startJumping", function () { animationController.play( "jumping" ); });
 				localPlayer.controller.addEventListener( "startSliding", function () { animationController.play( "falling" ); });
 				localPlayer.controller.addEventListener( "startFalling", function () { animationController.play( "falling" ); });
-				localPlayer.controller.addEventListener( "startJumping", function () { animationController.play( "jump" ); });
+
+				/*
+					if ( localPlayer.controller.isIdling ) {
+						animationController.motion.idling.weight = 1; 
+						animationController.play( "idling" ); 
+					}
+
+					if ( localPlayer.controller.isRunning ) {
+						animationController.motion.running.weight = 1; 
+						animationController.play( "running" ); 
+					}
+
+					if ( localPlayer.controller.isOnSlope ) {
+						animationController.motion.falling.weight = 1; 
+						animationController.play( "falling" ); 
+					}
+				*/
 
 				animationController.play( "idling" ); 
 
