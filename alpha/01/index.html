@@ -51,11 +51,11 @@
 			}
 			
 			#joystick1 {
-				right: calc(370px + 40px);
+				right: calc(40px + 370px);
 			}
 			
 			#jumpButton {
-				right: calc(370px + 105px);
+				right: calc(105px + 370px);
 			}
 
 		</style>
@@ -447,6 +447,8 @@
 
 		<script>
 
+			const w = 370;
+
 			MW.install( THREE ); // important!
 
 		//	Scene.
@@ -457,12 +459,12 @@
 
 			(function(){
 
-				var aspect = (window.innerWidth - 370) / window.innerHeight;
+				var aspect = (window.innerWidth - w) / window.innerHeight;
 				camera = new THREE.PerspectiveCamera( 50, aspect, 1, 10000 );
 				camera.position.set(0, 20, 50);
 
 				window.addEventListener("resize", function onWindowResize() {
-					camera.aspect = (window.innerWidth - 370) / window.innerHeight;
+					camera.aspect = (window.innerWidth - w) / window.innerHeight;
 					camera.updateProjectionMatrix();
 				});
 
@@ -522,11 +524,11 @@
 				renderer.shadowMap.enabled = true;
 				renderer.setClearColor( 0x000000 );
 				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( (window.innerWidth - 370), window.innerHeight );
+				renderer.setSize( (window.innerWidth - w), window.innerHeight );
 				document.body.appendChild( renderer.domElement );
 
 				window.addEventListener("resize", function onWindowResize() {
-					renderer.setSize( (window.innerWidth - 370), window.innerHeight );
+					renderer.setSize( (window.innerWidth - w), window.innerHeight );
 				});
 
 				mouse = new THREE.Vector2();
