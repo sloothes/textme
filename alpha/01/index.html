@@ -787,7 +787,7 @@
 
 		//	Avatar loader.
 
-			var url = "fbx/TextMeGirlv2_FreeTestPack.fbx";
+			var url = "/textme/alpha/01/fbx/TextMeGirlv2_FreeTestPack.fbx";
 			var loader = new THREE.FBXLoader();
 			loader.load( url, function( object ){
 
@@ -869,7 +869,7 @@
 
 				animationController = new MW.AnimationController( object );
 				debugMode && console.log( "\t"+ Object.keys( animationController.motion ).join("\n\t") );
-				
+
 				animationController.motion["jump"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["T-pose"].setLoop( THREE.LoopOnce, 0 );
 				animationController.motion["jumping"].setLoop( THREE.LoopOnce, 0 );
@@ -886,44 +886,57 @@
 				animationController.motion["skinning_test"].clampWhenFinished = true;
 				animationController.motion["back_flip_to_uppercut"].clampWhenFinished = true;
 
+			//	All these will play with .reset();
+				animationController.play( "jumping" ); // hack.
+				animationController.motion.jumping.timeScale = 1.5; // hack.
+
 			/*
-					falling, idling,
-					left_turn_90
-					samba_dancing
-					walking,
-					left_strafe_walk
-					jumping, running,
-					skinning_test
-					right_strafe_walking
-					back_flip_to_uppercut
-					wobbing, T-pose, jump,
-					gangnam_style,
-					right_turn_90
+					falling, idling, left_turn_90, samba_dancing, walking, left_strafe_walk,
+					jumping, running, skinning_test, right_strafe_walking, back_flip_to_uppercut,
+					wobbing, T-pose, jump, gangnam_style, right_turn_90,
 			*/
 
 				localPlayer.controller.addEventListener( "startJumping", function () { 
+					for ( var name in animationController.motion ) {
+						animationController.motion[name].weight = 0;
+					}
 					animationController.motion.jumping.weight = 1; 
 				});
 				localPlayer.controller.addEventListener( "startIdling", function () { 
+					for ( var name in animationController.motion ) {
+						animationController.motion[name].weight = 1;
+					}
+					animationController.motion.jump.weight = 0; 
 					animationController.motion.jumping.weight = 0; 
 				});
 				localPlayer.controller.addEventListener( "startWalking", function () { 
+					for ( var name in animationController.motion ) {
+						animationController.motion[name].weight = 1;
+					}
+					animationController.motion.jump.weight = 0; 
 					animationController.motion.jumping.weight = 0; 
 				});
 				localPlayer.controller.addEventListener( "startSliding", function () { 
+					for ( var name in animationController.motion ) {
+						animationController.motion[name].weight = 1;
+					}
+					animationController.motion.jump.weight = 0; 
 					animationController.motion.jumping.weight = 0; 
 				});
 				localPlayer.controller.addEventListener( "startFalling", function () { 
+					for ( var name in animationController.motion ) {
+						animationController.motion[name].weight = 1;
+					}
+					animationController.motion.jump.weight = 0; 
 					animationController.motion.jumping.weight = 0; 
 				});
 
 			//	localPlayer controller motions.
-
 				localPlayer.controller.addEventListener( "startIdling",  function () { animationController.play( "idling"  ); });
 				localPlayer.controller.addEventListener( "startWalking", function () { animationController.play( "running" ); });
 				localPlayer.controller.addEventListener( "startSliding", function () { animationController.play( "falling" ); });
 				localPlayer.controller.addEventListener( "startFalling", function () { animationController.play( "falling" ); });
-
+			//
 				localPlayer.controller.addEventListener( "startJumping", function () { animationController.motion.jumping.reset(); });
 
 				/*
