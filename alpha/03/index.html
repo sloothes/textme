@@ -106,6 +106,14 @@
 
 		<script>
 
+			Number.prototype.format = function (){
+				return this.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+			};
+
+		</script>
+
+		<script>
+
 			(function(){
 
 				var sidePanel = createSidePanel();
@@ -118,8 +126,87 @@
 
 				document.body.appendChild( sidePanel );
 				TabUI.append("TextMe", "Avatar", "Animation", "Control", "Login", "Settings" );
-				TabUI.TextMe.role.classList.add("active");
-				TabUI.TextMe.tab.classList.add("in","active");
+				TabUI.Animation.role.classList.add("active");
+				TabUI.Animation.tab.classList.add("in","active");
+
+			})();
+
+		</script>
+
+		<script>
+
+		//	Animation tab.
+			const animations = [];
+
+			(function(){
+
+				var input;
+			//	var fbx, animations;
+				var tab = TabUI.Animation.tab;
+				var row = document.createElement("div");
+				row.style.cssText = "margin:10px 15px;height:35px;text-align:center;";
+				tab.appendChild( row );
+
+				var importFBX = ImportButton();
+				row.appendChild( importFBX );
+
+				function ImportButton() {
+					
+					var button = document.createElement("div");
+					button.id = "import-fbx";
+					button.textContent = "Import FBX";
+					button.style.cssText = "min-width:60%;width:fit-content;height:40px;font-size:large;text-overflow:ellipsis;";
+					button.classList.add( "form-control", "btn", "btn-primary", "btn-white-outline", "gradient-btn" );
+
+					var input = document.createElement("input");
+					input.type = "file";
+					input.style.display = "none";
+
+					input.addEventListener( "change", function(){
+
+						var file = input.files[0];
+						var filename = file.name;
+						var extension = filename.split( "." ).pop().toLowerCase();
+
+						var reader = new FileReader();
+
+						reader.addEventListener( "progress", function ( e ) {
+							var size = "(" + Math.floor( e.total / 1000 ).format() + " KB)";
+							var progress = Math.floor( ( e.loaded / e.total ) * 100 ) + "%";
+							console.log( "Loading", filename, size, progress );
+						});
+
+						reader.addEventListener( "load", function ( e ) {
+
+							var data = reader.result;
+							var loader = new THREE.FBXLoader();
+							var group = loader.parse( data );
+							group.name = filename;
+							console.log( group );
+
+							fbx = group; // debug!
+							for ( var i = 0; i < group.animations.length; i++ ) {
+								animations.push( group.animations[i] );
+							}
+							console.log( animations );
+
+						}, false );
+
+						reader.readAsArrayBuffer( file );
+
+					});
+
+					button.addEventListener( "click", function(){
+						
+						input.value = "";
+						input.click();
+
+					});
+
+					button.appendChild( input );
+					return button;
+
+				}
 
 			})();
 
@@ -599,26 +686,32 @@
 				var playerRadius = 10;
 				localPlayer = new THREE.Object3D();
 				localPlayer.position.set( 0, 10, 0 );
+				localPlayer.name = "localPlayer";
 				scene.add( localPlayer );
 
 			//	Player helper.
 
-				var sphere = new THREE.Mesh(
+				localPlayerHelper = new THREE.Mesh(
 					new THREE.SphereGeometry( playerRadius, 8, 6 ),
 					new THREE.MeshBasicMaterial( { color: 0xff0000,  wireframe: true} )
 				);
-
-				localPlayer.add( sphere );
-				sphere.name = "playerhelper";
+				localPlayerHelper.name = "playerhelper";
+				localPlayer.add( localPlayerHelper );
 
 			//	Player controller.
 
-				localPlayer.controller = new MW.CharacterController( localPlayer, playerRadius );
-				localPlayer.controller.movementSpeed = 50;
-				world.add( localPlayer.controller );
+				localPlayerController = new MW.CharacterController( localPlayer, playerRadius );
+				localPlayerController.movementSpeed = 50;
+				world.add( localPlayerController ); // important!
 
 			//	CameraLight target.
 				cameraLight.target = localPlayer;
+
+			//	Update rotation.
+				(function update(){
+					requestAnimationFrame( update );
+					localPlayer.rotation.y = localPlayerController.direction + Math.PI; // important!
+				})();
 
 			})();
 
@@ -647,15 +740,15 @@
 			//	bind events.
 
 				keyInputControls.addEventListener( "movekeyon", function () { 
-					localPlayer.controller.isRunning = true; 
+					localPlayerController.isRunning = true; 
 				});
 
 				keyInputControls.addEventListener( "movekeyoff", function () { 
-					localPlayer.controller.isRunning = false; 
+					localPlayerController.isRunning = false; 
 				});
 
 				keyInputControls.addEventListener( "jumpkeypress", function () { 
-					localPlayer.controller.jump(); 
+					localPlayerController.jump(); 
 				});
 
 			// synch with keybord input and camera control input.
@@ -663,7 +756,7 @@
 				keyInputControls.addEventListener( "movekeychange",  function () {
 					var cameraFrontAngle = cameraControls.getFrontAngle();
 					var characterFrontAngle = keyInputControls.frontAngle;
-					localPlayer.controller.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
+					localPlayerController.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
 				});
 
 			/*
@@ -676,7 +769,7 @@
 
 					var cameraFrontAngle = cameraControls.getFrontAngle();
 					var characterFrontAngle = keyInputControls.frontAngle;
-					localPlayer.controller.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
+					localPlayerController.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
 
 				});
 			*/
@@ -718,37 +811,37 @@
 
 				joystick1.addEventListener( "active", function onActive() { 
 
-					if (  localPlayer.controller.isJumping 
-						|| !localPlayer.controller.isGrounded 
-						|| localPlayer.controller.isOnSlope ) {
+					if (  localPlayerController.isJumping 
+						|| !localPlayerController.isGrounded 
+						|| localPlayerController.isOnSlope ) {
 						return;
 					}
 
-					localPlayer.controller.isRunning = true;
+					localPlayerController.isRunning = true;
 
 				});
 
 				joystick1.addEventListener( "disactive", function onDisactive() { 
 
-					if (  localPlayer.controller.isJumping 
-						|| !localPlayer.controller.isGrounded 
-						||  localPlayer.controller.isOnSlope ) {
+					if (  localPlayerController.isJumping 
+						|| !localPlayerController.isGrounded 
+						||  localPlayerController.isOnSlope ) {
 						return;
 					}
 
-					localPlayer.controller.isRunning = false;
+					localPlayerController.isRunning = false;
 
 				});
 
 				jumpButton.addEventListener( "press", function onPress() { 
 
-					if (  localPlayer.controller.isJumping 
-						|| !localPlayer.controller.isGrounded 
-						|| localPlayer.controller.isOnSlope ) {
+					if (  localPlayerController.isJumping 
+						|| !localPlayerController.isGrounded 
+						|| localPlayerController.isOnSlope ) {
 						return;
 					}
 
-					localPlayer.controller.jump();
+					localPlayerController.jump();
 
 				});
 
@@ -756,7 +849,7 @@
 
 					if ( this.isActive ) {
 
-						localPlayer.controller.direction = (3 * Math.PI/2) - cameraControls.getFrontAngle() + this.angle;
+						localPlayerController.direction = (3 * Math.PI/2) - cameraControls.getFrontAngle() + this.angle;
 
 					}
 				};
@@ -785,21 +878,22 @@
 		</script>
 
 
-		<!-- script>
+		<script>
 
 		//	Avatar loader.
 
-			var url = "/textme/animations/TextMeGirlv2_TextOnPhone_T49b.fbx";
+			var url = "/textme/animations/TextMeGirlv2.3_TextOnPhoneT49b.fbx";
 			var loader = new THREE.FBXLoader();
-			loader.load( url, function( object ){
+			loader.load( url, function( group ){
 
 			//	object is THREE.Group.
-				object.name = "TextMeGirlv2.01";
-				var s = 0.00033; object.scale.set(s,s,s); // important!
-				debugMode && console.log( object ); 
+				group.name = "TextMeGirlv2.3";
+				var s = 0.00033; group.scale.set(s,s,s); // important!
+				group.position.y = -localPlayerController.radius;
+				debugMode && console.log( group ); 
 
 			//	Replace materials.
-				object.children.forEach( function( child ){
+				group.children.forEach( function( child ){
 
 					if ( child.type !== "SkinnedMesh" ) return;
 
@@ -825,93 +919,103 @@
 
 
 			//	Collect skinned meshes.
-				var meshes = object.children.filter( function( item ){
+				var meshes = group.children.filter( function( item ){
 					return item.type === "SkinnedMesh";
 				});
-
 				//	TODO: Create mesh droplist to avatar tab.
 				//	TODO: Create material droplist to avatar tab.
 				debugMode && console.log( meshes ); 
 
 
-			//	Add object to scene.
-			//	"object" must be add before animations.
+			//	Add group to scene.
+			//	must be add before animation controller.
+				localPlayer.add( group );
+				localPlayerHelper.visible = false;
+				localPlayerController.direction += Math.PI; // important!
 
-				scene.add( object );
-				localPlayer.visible = false;
-				localPlayer.controller.direction += Math.PI;
-
-			//	Update avatar.
-
+			/*
+			//	Update position/rotation.
 				(function update(){
 					requestAnimationFrame( update );
 					//	position.
-					object.position.set(
-						localPlayer.controller.center.x,
-						localPlayer.controller.center.y - localPlayer.controller.radius,
-						localPlayer.controller.center.z
+					group.position.set(
+						localPlayerController.center.x,
+						localPlayerController.center.y - localPlayerController.radius,
+						localPlayerController.center.z
 					);
 					//	rotation.
-					object.rotation.y = localPlayer.controller.direction + Math.PI; // important!
+					group.rotation.y = localPlayerController.direction + Math.PI; // important!
 				})();
-
+			*/
 
 			//	Animations.
 
-				//	CleanUp animation names.
-				var animations = object.animations;
+			//	CleanUp animation names.
+				var animations = group.animations;
 				animations.forEach( function( clip ){
-					clip.name = clip.name.replace("Armature|", "");
+					clip.name = clip.name.replace("Armature|", "").toLowerCase();
 				});
-
 				//	TODO: Create animation droplist to animations tab.
+				debugMode && console.log( animations ); 
 
 
 			//	Animation controller.
 
-				animationController = new MW.AnimationController( object );
-				debugMode && console.log( "\t"+ Object.keys( animationController.motion ).join("\n\t") );
+				animationController = new MW.AnimationController( group );
+				debugMode && console.log( "\t"+ Object.keys( animationController.motion ).join(",\n\t") );
 
 			/*
-					textingOnPhone(mirror),
-					running, idling, walking,
-					textingOnPhone, 
-					talkingOnPhone(mirror), 
-					T-pose, talkiingOnPhone,
-					standingIdle
+					running,
+					falldown,
+					t-pose,
+					jumping,
+					sliding,
+					texting,
+					phoning,
+					idling
 			*/
 
-			//	animationController.motion["T-pose"].setLoop( THREE.LoopOnce, 0 );
-			//	animationController.motion["textingOnPhone"].setLoop( THREE.LoopOnce, 0 );
-			//	animationController.motion["talkiingOnPhone"].setLoop( THREE.LoopOnce, 0 );
-			//	animationController.motion["textingOnPhone(mirror)"].setLoop( THREE.LoopOnce, 0 );
-			//	animationController.motion["talkingOnPhone(mirror)"].setLoop( THREE.LoopOnce, 0 );
-
-			//	animationController.motion["T-pose"].clampWhenFinished = true;
-			//	animationController.motion["textingOnPhone"].clampWhenFinished = true;
-			//	animationController.motion["talkiingOnPhone"].clampWhenFinished = true;
-			//	animationController.motion["textingOnPhone(mirror)"].clampWhenFinished = true;
-			//	animationController.motion["talkingOnPhone(mirror)"].clampWhenFinished = true;
-
-			//	animationController.motion.jumping.timeScale = 1.5; // hack.
-			//	All these will play with .reset();
-			//	animationController.play( "jumping" ); // hack.
+				animationController.motion["t-pose"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["t-pose"].clampWhenFinished = true;
 
 			//	localPlayer controller motions.
-				localPlayer.controller.addEventListener( "startIdling",  function () { animationController.play( "standingIdle"  ); });
-				localPlayer.controller.addEventListener( "startWalking", function () { animationController.play( "running" ); });
-			//	localPlayer.controller.addEventListener( "startSliding", function () { animationController.play( "falling" ); });
-			//	localPlayer.controller.addEventListener( "startFalling", function () { animationController.play( "falling" ); });
-			//	localPlayer.controller.addEventListener( "startJumping", function () { animationController.play( "jumping" ); });
+				localPlayerController.addEventListener( "startIdling",  function () { animationController.play( "idling"  ); });
+				localPlayerController.addEventListener( "startWalking", function () { animationController.play( "running" ); });
+				localPlayerController.addEventListener( "startSliding", function () { animationController.play( "sliding" ); });
+				localPlayerController.addEventListener( "startFalling", function () { animationController.play( "sliding" ); });
 
-				animationController.play( "standingIdle" ); 
+			//	Jumping (hack)
 
-			//
+				(function(){
+
+					animationController.motion.jumping.setLoop( THREE.LoopOnce, 0 );
+					animationController.motion.jumping.clampWhenFinished = true;
+					localPlayerController.addEventListener( "startJumping", function () { 
+						animationController.play("jumping");
+						animationController.motion.jumping.reset();
+					});
+
+				})();
+
+				var clock = new THREE.Clock();
+
+				(function update(){
+					requestAnimationFrame( update );
+					var delta = clock.getDelta();
+					animationController.update( delta );
+				})();
+
+				animationController.play( "idling" ); 
+				debugMode && console.log( animationController ); 
+					   
+			});
+
+			/*
 				(function(){
 
 					var interval;
 					var isTexting = false;
-					var action = "textingOnPhone";
+					var action = "texting";
 					var clip = animationController.motion[ action ]._clip;
 					var timeout = clip.duration * 1000;
 				//	var dispatcher = new THREE.EventDispatcher();
@@ -964,8 +1068,9 @@
 					});
 
 				})();
+			*/
 
-				/*
+			/*
 					dispatcher.addEventListener( "texting", function () {
 
 						var playerController = localPlayer.controller;
@@ -998,22 +1103,10 @@
 						animationController.play( action );
 
 					});
-				*/
-			//
 
-				var clock = new THREE.Clock();
+			*/
 
-				(function update(){
-					requestAnimationFrame( update );
-					var delta = clock.getDelta();
-					animationController.update( delta );
-				})();
-
-				debugMode && console.log( animationController ); 
-
-			});
-
-		</script -->
+		</script>
 
 	</body>
 </html>
