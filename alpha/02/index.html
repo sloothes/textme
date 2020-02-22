@@ -914,9 +914,59 @@
 					var action = "textingOnPhone";
 					var clip = animationController.motion[ action ]._clip;
 					var timeout = clip.duration * 1000;
-					var dispatcher = new THREE.EventDispatcher();
+				//	var dispatcher = new THREE.EventDispatcher();
 					var input = document.getElementById("text-input");
 
+					input.addEventListener( "blur", function(){ 
+						
+						isTexting = false;
+						clearTimeout( interval );
+						animationController.play( "standingIdle"  );
+					
+					});
+
+					input.addEventListener( "focus", function(){
+
+						clearTimeout( interval );
+					//	dispatcher.dispatchEvent({ type: "texting" });
+
+						var playerController = localPlayer.controller;
+
+						if ( isTexting || playerController.isJumping ) {
+							
+							return;
+
+						}
+
+						isTexting = true; 
+
+						interval = setTimeout( function () {
+
+							if ( isTexting ) {
+
+								animationController.play( action );
+
+							} else if ( playerController.isRunning ) {
+
+								isTexting = false;
+								animationController.play( "running" );
+
+							} else if ( playerController.isIdling ) {
+
+								isTexting = false;
+								animationController.play( "standingIdle"  );
+
+							}
+
+						}, timeout );
+
+						animationController.play( action );
+
+					});
+
+				})();
+
+				/*
 					dispatcher.addEventListener( "texting", function () {
 
 						var playerController = localPlayer.controller;
@@ -949,24 +999,7 @@
 						animationController.play( action );
 
 					});
-
-					input.addEventListener( "blur", function(){ 
-						
-						isTexting = false;
-						clearTimeout( interval );
-						var playerController = localPlayer.controller;
-						playerController.dispatchEvent({ type: "startIdling" }) 
-					
-					});
-
-					input.addEventListener( "focus", function(){
-
-						clearTimeout( interval );
-						dispatcher.dispatchEvent({ type: "texting" });
-
-					});
-
-				})();
+				*/
 			//
 
 				var clock = new THREE.Clock();
