@@ -449,6 +449,7 @@
 			const w = 370;
 
 			MW.install( THREE ); // important!
+			vent = new THREE.EventDispatcher(); // dispatcher.
 
 		//	Scene.
 
@@ -793,7 +794,7 @@
 			loader.load( url, function( object ){
 
 			//	object is THREE.Group.
-				object.name = "TextMeGirlv2";
+				object.name = "TextMeGirlv2.01";
 				var s = 0.00033; object.scale.set(s,s,s); // important!
 				debugMode && console.log( object ); 
 
@@ -880,11 +881,11 @@
 					standingIdle
 			*/
 
-				animationController.motion["T-pose"].setLoop( THREE.LoopOnce, 0 );
-				animationController.motion["textingOnPhone"].setLoop( THREE.LoopOnce, 0 );
-				animationController.motion["talkiingOnPhone"].setLoop( THREE.LoopOnce, 0 );
-				animationController.motion["textingOnPhone(mirror)"].setLoop( THREE.LoopOnce, 0 );
-				animationController.motion["talkingOnPhone(mirror)"].setLoop( THREE.LoopOnce, 0 );
+			//	animationController.motion["T-pose"].setLoop( THREE.LoopOnce, 0 );
+			//	animationController.motion["textingOnPhone"].setLoop( THREE.LoopOnce, 0 );
+			//	animationController.motion["talkiingOnPhone"].setLoop( THREE.LoopOnce, 0 );
+			//	animationController.motion["textingOnPhone(mirror)"].setLoop( THREE.LoopOnce, 0 );
+			//	animationController.motion["talkingOnPhone(mirror)"].setLoop( THREE.LoopOnce, 0 );
 
 			//	animationController.motion["T-pose"].clampWhenFinished = true;
 			//	animationController.motion["textingOnPhone"].clampWhenFinished = true;
@@ -896,49 +897,77 @@
 			//	All these will play with .reset();
 			//	animationController.play( "jumping" ); // hack.
 
-				localPlayer.controller.addEventListener( "startJumping", function () { 
-					for ( var name in animationController.motion ) {
-						animationController.motion[name].weight = 0;
-					}
-				//	animationController.motion.jumping.weight = 1; 
-				});
-				localPlayer.controller.addEventListener( "startIdling", function () { 
-					for ( var name in animationController.motion ) {
-						animationController.motion[name].weight = 1;
-					}
-				//	animationController.motion.jump.weight = 0; 
-				//	animationController.motion.jumping.weight = 0; 
-				});
-				localPlayer.controller.addEventListener( "startWalking", function () { 
-					for ( var name in animationController.motion ) {
-						animationController.motion[name].weight = 1;
-					}
-				//	animationController.motion.jump.weight = 0; 
-				//	animationController.motion.jumping.weight = 0; 
-				});
-				localPlayer.controller.addEventListener( "startSliding", function () { 
-					for ( var name in animationController.motion ) {
-						animationController.motion[name].weight = 1;
-					}
-				//	animationController.motion.jump.weight = 0; 
-				//	animationController.motion.jumping.weight = 0; 
-				});
-				localPlayer.controller.addEventListener( "startFalling", function () { 
-					for ( var name in animationController.motion ) {
-						animationController.motion[name].weight = 1;
-					}
-				//	animationController.motion.jump.weight = 0; 
-				//	animationController.motion.jumping.weight = 0; 
-				});
-
 			//	localPlayer controller motions.
-				localPlayer.controller.addEventListener( "startIdling",  function () { animationController.play( "idling"  ); });
+				localPlayer.controller.addEventListener( "startIdling",  function () { animationController.play( "standingIdle"  ); });
 				localPlayer.controller.addEventListener( "startWalking", function () { animationController.play( "running" ); });
 			//	localPlayer.controller.addEventListener( "startSliding", function () { animationController.play( "falling" ); });
 			//	localPlayer.controller.addEventListener( "startFalling", function () { animationController.play( "falling" ); });
-			//	localPlayer.controller.addEventListener( "startJumping", function () { animationController.motion.jumping.reset(); });
+			//	localPlayer.controller.addEventListener( "startJumping", function () { animationController.play( "jumping" ); });
 
-				animationController.play( "idling" ); 
+				animationController.play( "standingIdle" ); 
+
+			//
+				(function(){
+
+					var interval;
+					var isTexting = false;
+					var action = "textingOnPhone";
+					var clip = animationController.motion[ action ]._clip;
+					var timeout = clip.duration * 1000;
+					var dispatcher = new THREE.EventDispatcher();
+					var input = document.getElementById("text-input");
+
+					dispatcher.addEventListener( "texting", function () {
+
+						var playerController = localPlayer.controller;
+
+						if ( isTexting || playerController.isJumping ) {
+							
+							return;
+
+						}
+
+						isTexting = true; 
+
+						interval = setTimeout( function () {
+
+							if ( playerController.isIdling ) {
+
+								animationController.play( "standingIdle"  );
+
+
+							} else if ( playerController.isRunning ) {
+
+								animationController.play( "running" );
+
+							}
+
+							isTexting = false;
+
+						}, timeout );
+
+						animationController.play( action );
+
+					});
+
+					input.addEventListener( "blur", function(){ 
+						
+						isTexting = false;
+						clearTimeout( interval );
+						var playerController = localPlayer.controller;
+						playerController.dispatchEvent({ type: "startIdling" }) 
+					
+					});
+
+					input.addEventListener( "focus", function(){
+
+						clearTimeout( interval );
+						dispatcher.dispatchEvent({ type: "texting" });
+
+					});
+
+				})();
+			//
 
 				var clock = new THREE.Clock();
 
