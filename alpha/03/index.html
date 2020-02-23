@@ -991,8 +991,12 @@
 					animationController.motion.jumping.setLoop( THREE.LoopOnce, 0 );
 					animationController.motion.jumping.clampWhenFinished = true;
 					localPlayerController.addEventListener( "startJumping", function () { 
-						animationController.play("jumping");
-						animationController.motion.jumping.reset();
+						if ( localPlayerController.isRunning ) {
+							animationController.play("jumping");
+							animationController.motion.jumping.reset();
+						} else {
+							animationController.play( "sliding" );
+						}
 					});
 
 				})();
