@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+
+		<title>textme3D (alpha 0.4)</title>
+
+		<meta charset="utf-8">
+		<meta name="generator" content="Three.js Editor">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+		<link rel="stylesheet" href="/css/joystick.css">
+		<link rel="stylesheet" href="/css/bootstrap.min.css">
+		<link rel="stylesheet" href="/css/bootbox-dialoges.css">
+
+		<script src="/js/jquery.min.js"></script> 
+		<script src="/js/system.min.js"></script>
+		<script src="/js/signals.min.js"></script>
+		<script src="/js/inflate.min.js"></script>
+		<script src="/js/zangodb.min.js"></script>
+		<script src="/js/bootstrap.min.js"></script>
+
+		<style>
+
+			body {
+				font-family: sans-serif;
+				font-size: 13px;
+				background-color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#loading-bar {
+				width:100%;
+				height:100%;
+				top:0; left:0;
+				position:fixed;
+				display:flex;
+				align-items:center;
+				justify-content:center;
+			}
+
+			.middle > * {
+				top:0; 
+				left:0;
+				right:0;
+				bottom:0;
+				margin:auto;"
+				position:absolute;
+			}
+			
+			#joystick1 {
+				right: calc(40px + 370px);
+			}
+			
+			#jumpButton {
+				right: calc(105px + 370px);
+			}
+
+		</style>
+	</head>
+
+	<body ontouchstart="">
+
+		<script src="/textme/alpha/js/three.js"></script>
+		<script src="/textme/alpha/js/TabUI.js"></script>
+		<script src="/textme/alpha/js/MeshWalk.js"></script>
+		<script src="/textme/alpha/js/UVsDebug.js"></script>
+		<script src="/textme/alpha/js/FBXLoader.js"></script>
+		<script src="/textme/alpha/js/VirtualInput.js"></script>
+		<script src="/textme/alpha/js/EditorControls.js"></script>
+		<script src="/textme/alpha/js/socketcluster.js"></script>
+		<script src="/textme/alpha/js/sc-codec-min-bin.js"></script>
+
+		<script>
+
+			debugMode = true;
+
+			socket = socketCluster.create({
+			//  port:443,
+				hostname: "anywhere3d.com",
+				codecEngine: scCodecMinBin,
+			});
+
+			socket.on("connect", function(status){
+				debugMode && console.log({"socket status": status});
+			});
+
+			socket.on("error", function (err) {
+				console.error( err.stack );
+			});
+
+			socket.on("authStateChange", function( state ){
+				debugMode && console.log({"scene authStateChange": state});
+			});
+
+			socket.on("subscribe", function( name, object ){
+				debugMode && console.log("subscribed successfully to channel:", object );
+			});
+
+			socket.on("disconnect", function(){
+				debugMode && console.log("You have been disconnected." );
+			});
+
+		</script>
+
+		<script>
+
+			Number.prototype.format = function (){
+				return this.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+			};
+
+		</script>
+
+		<script>
+
+			(function(){
+
+				var sidePanel = createSidePanel();
+				var loginTab = TabUI.add( "Login", "login-tab" );
+				var avatarTab = TabUI.add( "Avatar", "avatar-tab" );
+				var textmeTab = TabUI.add( "TextMe", "textme-tab" );
+				var controlTab = TabUI.add( "Control", "control-tab" );
+				var settingsTab = TabUI.add( "Settings", "settings-tab" );
+				var animationTab = TabUI.add( "Animation", "mobile-tab" );
+
+				document.body.appendChild( sidePanel );
+				TabUI.append("TextMe", "Avatar", "Animation", "Control", "Login", "Settings" );
+				TabUI.Animation.role.classList.add("active");
+				TabUI.Animation.tab.classList.add("in","active");
+
+			})();
+
+		</script>
+
+		<script>
+
+		//	Animation tab.
+
+			(function(){
+
+				var tab = TabUI.Animation.tab;
+
+				var row = document.createElement("h3");
+				row.textContent = "Animation";
+
+				var select = document.createElement("select");
+				select.id = "animation-droplist";
+				select.style.cssText = "width:180px;color:#000;" // float:left;
+					+ "border:1px solid;border-radius:4px;padding:2px 4px 4px 4px;"
+					+ "font-size:20px;margin-left:10px;";
+
+				row.appendChild( select );
+				tab.appendChild( row );
+
+			})();
+
+		</script>
+
+		<script>
+
+		//	Import FBX
+
+			(function(){
+
+				var input;
+			//	var fbx, animations;
+				var tab = TabUI.Settings.tab;
+				var row = document.createElement("div");
+				row.style.cssText = "margin:10px 15px;height:35px;text-align:center;";
+				tab.appendChild( row );
+
+				var importFBX = ImportButton();
+				row.appendChild( importFBX );
+
+				function ImportButton() {
+					
+					var button = document.createElement("div");
+					button.id = "import-fbx";
+					button.textContent = "Import FBX";
+					button.style.cssText = "min-width:60%;width:fit-content;height:40px;font-size:large;text-overflow:ellipsis;";
+					button.classList.add( "form-control", "btn", "btn-primary", "btn-white-outline", "gradient-btn" );
+
+					var input = document.createElement("input");
+					input.type = "file";
+					input.style.display = "none";
+
+					input.addEventListener( "change", function(){
+
+						var file = input.files[0];
+						var filename = file.name;
+						var extension = filename.split( "." ).pop().toLowerCase();
+
+						var reader = new FileReader();
+
+						reader.addEventListener( "progress", function ( e ) {
+							var size = "(" + Math.floor( e.total / 1000 ).format() + " KB)";
+							var progress = Math.floor( ( e.loaded / e.total ) * 100 ) + "%";
+							console.log( "Loading", filename, size, progress );
+						});
+
+						reader.addEventListener( "load", function ( e ) {
+
+							var data = reader.result;
+							var loader = new THREE.FBXLoader();
+							var group = loader.parse( data );
+							group.name = filename;
+							console.log( group );
+
+							fbx = group; // debug!
+							animations = group.animations;
+							console.log( animations );
+
+						}, false );
+
+						reader.readAsArrayBuffer( file );
+
+					});
+
+					button.addEventListener( "click", function(){
+						
+						input.value = "";
+						input.click();
+
+					});
+
+					button.appendChild( input );
+					return button;
+
+				}
+
+			})();
+
+		</script>
+
+		<script>
+
+		//	TextMe tab.
+
+			(function(){
+
+				var input;
+				var tab = TabUI.TextMe.tab;
+				var textboard = new Textboard();
+				var textinput = new TextInput();
+				var sendbutton = new SendButton();
+				var clearbutton = new ClearButton( textboard );
+				var textButtons = function(){
+
+					var row = document.createElement("div");
+					row.style.cssText = "margin:10px 15px;height:35px;text-align:center;";
+
+					row.appendChild( clearbutton );
+					row.appendChild( sendbutton );
+
+					return row;
+				};
+
+				var header = document.createElement("h3");
+				header.textContent = "Textboard";
+				header.style.cssText = "text-align:center;"
+				tab.appendChild( header );
+
+				tab.appendChild( textboard );
+				tab.appendChild( textinput );
+				tab.appendChild( textButtons() );
+
+				function Textboard(){
+
+					var container = document.createElement("div");
+					container.style.padding = "10px;";
+					container.style.margin = "20px auto";
+					container.style.border = "3px solid #fff";
+					container.style.borderRadius = "13px";
+
+					var board = document.createElement("div");
+					board.id = "text-board"; // important!
+					board.style.margin = "20px auto 10px";
+					board.style.maxWidth = "280px";
+					board.style.minHeight = "200px";
+					board.style.maxHeight = "350px";
+					board.style.overflowY = "auto";
+					board.style.overflowX = "hidden";
+					container.appendChild( board );
+
+					return container;
+				}
+
+				function TextInput(){
+
+					var row = document.createElement("div");
+					row.style.cssText = "margin:10px 0px;height:35px;text-align:center;";
+
+					input = document.createElement("input");
+					input.id = "text-input";
+					input.type = "text";
+					input.style.color = "#000";
+					input.style.margin = "auto";
+					input.style.border = "1px solid";
+					input.style.padding = "10px";
+					input.style.maxWidth = "280px";
+					input.style.fontSize = "large";
+					input.style.fontWeight = "normal";
+					input.style.background = "none";
+					input.setAttribute("placeholder", "type a message");
+					input.classList.add("form-control");
+
+				//	KeyInputControls.
+				//	input.addEventListener( "blur", keyInputControls.On, false); // important!
+				//	input.addEventListener( "focus", keyInputControls.Off, false ); // important!
+
+					input.addEventListener( "keydown", function( e ){
+						e.stopPropagation(); // always, important!
+					});
+
+					input.addEventListener( "keyup", function( e ){
+						e.stopPropagation(); // always, important!
+
+					//	"enter" e.keyCode:13
+						if ( e.keyCode == 13 ) {
+
+							if ( !input.value ) return;
+
+							sendMessage();
+
+						}
+
+					});
+
+					row.appendChild( input );
+
+					return row;
+				}
+
+				function ClearButton( board ){
+
+					var interval;
+
+					var button = document.createElement("div");
+					button.id = "clear-board";
+					button.textContent = "Clear textboard";
+					button.style.cssText = "min-width:60%;width:fit-content;height:40px;font-size:large;float:left;text-overflow:ellipsis;";
+					button.classList.add( "form-control", "btn", "btn-danger", "btn-white-outline", "gradient-btn" );
+
+					button.addEventListener( "click", function(){
+
+						clearTimeout( interval );
+						var board = document.getElementById("text-board");
+
+						board.innerHTML = "";
+
+						interval = setTimeout(function(){ 
+
+							var container = document.createElement("div");
+							container.style.color = "#fff";
+							container.style.margin = "0px auto";
+							container.style.height = "auto";
+							container.style.padding = "10px";
+							container.style.overflow = "hidden";
+							container.style.fontWeight = "normal";
+							container.style.background = "none";
+							var span = document.createElement("i");
+							span.textContent = "Textboard cleared.";
+							container.appendChild( span );
+							board.appendChild( container );
+
+						}, 250);
+
+					});
+
+					return button;
+				}
+
+				function SendButton(){
+
+					var interval;
+
+					var button = document.createElement("div");
+					button.id = "send-message";
+					button.textContent = "Send";
+					button.style.cssText = "min-width:30%;width:fit-content;height:40px;font-size:large;float:right;text-overflow:ellipsis;";
+					button.classList.add( "form-control", "btn", "btn-primary", "btn-white-outline", "gradient-btn" );
+
+					button.addEventListener( "click", function(){
+
+						clearTimeout( button.interval );
+						var input = document.getElementById("text-input");
+
+						if ( !input.value ) return;
+
+						interval = setTimeout( function(){
+							sendMessage();
+						}, 250);
+
+					});
+
+					return button;
+				}
+
+			//
+
+				var username = "nobody";
+				var guestId = generateSalt();
+				var channelName = "sloothes.com/channels/textme";
+
+				function sendMessage(){
+
+					var input = document.getElementById("text-input");
+
+					if ( !(socket && username) ) return;
+					if ( !(input && input.value) ) return;
+
+					var data = {
+						sccid: socket.id,
+						message:  input.value,
+						username: username || guestId,
+					};
+
+					socket.publish( channelName, data );
+					debugMode && console.log( "message send:", data );
+
+				//	Clear input.
+
+					setTimeout(function(){
+						input.value = ""; 
+					});
+				}
+
+				function displayMessage(data, options){
+
+					if ( !data ) return;
+				//	if ( !(data && data.message) ) return;
+
+					var container = document.createElement("div");
+					container.style.margin = "10px";
+					container.style.height = "auto";
+					container.style.padding = "10px";
+					container.style.overflow = "hidden";
+					container.style.borderRadius = "5px";
+					container.style.color = options.color || "#000";
+					container.style.background = options.background || "none";
+					container.style.fontWeight = options.fontWeight || "normal";
+
+					var span = document.createElement("span");
+					span.style.fontWeight = "bold";
+					span.textContent = data.username+": "; // important!
+					container.appendChild( span );
+
+					var span = document.createElement("span");
+					span.textContent = data.message; // important!
+					container.appendChild( span );
+
+					document.getElementById("text-board").appendChild( container );
+
+					setTimeout(function(){
+						container.scrollIntoView({ behavior: "smooth" }); // important!
+					});
+
+				}
+
+				function generateSalt(length, set){
+
+					var length = length || 7;
+					var set = set || "abcdefghijklmnopqurstuvwxyz0123456789ABCDEFGHIJKLMNOPQURSTUVWXYZ";
+
+					var salt = "";
+					for (var i = 0; i < length; i++) {
+						var p = Math.floor(Math.random() * set.length);
+						salt += set[p];
+					}
+
+					return salt;
+				}
+
+			//	Subscribe.
+
+			//	Subscription must not be "on connect" because
+			//	when we have timeout disconnection and user reconnected
+			//	automatic again, we have multiple subscriptions and we
+			//	sent multiple times the message. So when we make subscription?
+
+				setTimeout( function(){
+
+					var chatChannel = socket.subscribe( channelName, { batch: true } );
+					debugMode && console.log("chatChannel:", chatChannel);
+
+				//  On subscribe success.
+
+					chatChannel.on("subscribe", function( name ) {
+						debugMode && console.log( "Subscribed to ", name );
+					});
+
+				//  On Subscribe error.
+
+					chatChannel.on("subscribeFail", function(err) {
+						console.error("Failed to subscribe to the chatroom channel due to error:", err);
+					});
+
+				//  On unsubscribe.
+
+					chatChannel.on("unsubscribe", function( name ) {
+						console.log("Unsubscribed from channel:", name);
+					});
+
+				//  Watch chat channel.
+
+					chatChannel.watch( function( data ){
+
+						if ( data.sccid !== socket.id ) {
+							debugMode && console.log( "received:", data );
+						}
+
+						if ( !(data && data.message) ) return;
+						if ( !data.sccid ) data.username = "system";
+						if ( !data.username ) data.username = data.sccid;
+
+						var options = {};
+
+						if ( data.sccid === socket.id ) {
+							options.color = "#fff";
+							options.background = "#0a7ada";
+						}
+
+						var sidePanel = document.getElementById("side-panel");
+						if ( sidePanel.style.transform != "translateX(0px)" ) {
+							sidePanel.style.transform = "translateX(0px)";
+						}
+
+						var pill = TabUI.TextMe.pill.parentElement;
+						if ( !pill.classList.contains("active") ) {
+						//	the easy way:
+							pill.click(); // important!
+						}
+
+						//	the hard way:
+						//	remove class "active", from all roles,
+						//	remove class "active", "in" from tabs,
+						//	add class "active" to TextMe.role, and
+						//	add class "in", "active" to TextMe.tab.
+
+						setTimeout( displayMessage, 250, data, options );
+					});
+
+				//	On disconnect.
+				//	socket.on("disconnect", function(){
+				//		socket.unsubscribe( channelName ); // same as above.
+				//	});
+
+				});
+
+			})();
+
+		</script>
+
+		<script>
+
+			const w = 370;
+
+			MW.install( THREE ); // important!
+		//	vent = new THREE.EventDispatcher(); // dispatcher.
+
+		//	Scene.
+
+			scene = new THREE.Scene();
+
+		//	Camera.
+
+			(function(){
+
+				var aspect = (window.innerWidth - w) / window.innerHeight;
+				camera = new THREE.PerspectiveCamera( 50, aspect, 1, 10000 );
+				camera.position.set(0, 20, 50);
+
+				window.addEventListener("resize", function onWindowResize() {
+					camera.aspect = (window.innerWidth - w) / window.innerHeight;
+					camera.updateProjectionMatrix();
+				});
+
+			})();
+
+	/*
+		//	Editor Controls.
+
+			(function(){
+				controls = new THREE.EditorControls(camera);
+				if ( controls && controls instanceof THREE.EditorControls ) {
+					camera.lookAt(controls.center); // important!
+				}
+			})();
+	*/
+
+		//  Camera Light.
+
+			(function(){
+
+				cameraLight = new THREE.DirectionalLight( 0xdfebff, 0.75 );
+				cameraLight.position.set( 0, 500, 300 );
+				cameraLight.castShadow = true;
+				cameraLight.shadow.mapSize.width  = Math.pow(2, 10); // 2048;
+				cameraLight.shadow.mapSize.height = Math.pow(2, 10); // 2048;
+
+				var d = 30;
+				cameraLight.shadow.camera.left = - d;
+				cameraLight.shadow.camera.right = d;
+				cameraLight.shadow.camera.top = d;
+				cameraLight.shadow.camera.bottom = - d;
+				cameraLight.shadow.camera.far = 10000;
+
+				shadowHelper = new THREE.CameraHelper(cameraLight.shadow.camera);
+				shadowHelper.visible = false;
+
+				scene.add( cameraLight, shadowHelper  );
+
+				(function update(){
+					requestAnimationFrame( update );
+					cameraLight.position.copy( camera.position );
+				})();
+
+			})();
+
+		//  Renderer.
+
+			(function(){
+
+				renderer = new THREE.WebGLRenderer({
+					antialias: true,
+					preserveDrawingBuffer: true,
+				});
+
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+				renderer.shadowMap.enabled = true;
+				renderer.setClearColor( 0x000000 );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( (window.innerWidth - w), window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				window.addEventListener("resize", function onWindowResize() {
+					renderer.setSize( (window.innerWidth - w), window.innerHeight );
+				});
+
+				mouse = new THREE.Vector2();
+
+				renderer.domElement.addEventListener("mousemove", function onMouseMove(e) {
+					mouse.x = ( e.clientX - (renderer.domElement.width * 0.5) );
+					mouse.y = ( e.clientY - (renderer.domElement.height * 0.5) );
+				});
+
+
+				(function render(){
+					requestAnimationFrame( render );
+					renderer.render( scene, camera );
+				})();
+
+			})();
+
+		//	World - Octree.
+
+			(function(){
+
+				world = new MW.World();
+
+				var min = new THREE.Vector3( -1500, -1500, -1500 );
+				var max = new THREE.Vector3(  1500,  1500,  1500 );
+				var partition = 5;
+
+				octree = new MW.Octree( min, max, partition );
+				world.add( octree );
+
+				var clock = new THREE.Clock();
+
+				(function update(){
+					requestAnimationFrame( update );
+					var delta = clock.getDelta();
+					world.step( Math.min( delta, 0.02 ) );
+				})();
+
+			})();
+
+		//	ground.js
+
+			(function(){
+
+				var ground = new THREE.Mesh(
+					new THREE.PlaneGeometry( 3000, 3000, 1, 1 ),
+					new THREE.MeshLambertMaterial({ 
+						opacity:1, 
+						color:0x829ec4,
+					})
+				);
+
+			//	We need only the geometry of the ground
+			//	so there is not need to add to the scene.
+				ground.rotation.x = -Math.PI / 2; // THREE.Math.degToRad( -90 );
+				octree.importThreeMesh( ground ); // important!
+
+			//	Ground Helper.
+				groundHelper = new THREE.GridHelper( 3000, 300, 0x444444, 0x444444 );
+				scene.add( groundHelper );
+
+			})();
+
+		//	localPlayer Controller.
+
+			(function(){
+
+				var playerRadius = 10;
+				localPlayer = new THREE.Object3D();
+				localPlayer.position.set( 0, 10, 0 );
+				localPlayer.name = "localPlayer";
+				scene.add( localPlayer );
+
+			//	Player helper.
+
+				localPlayerHelper = new THREE.Mesh(
+					new THREE.SphereGeometry( playerRadius, 8, 6 ),
+					new THREE.MeshBasicMaterial( { color: 0xff0000,  wireframe: true} )
+				);
+				localPlayerHelper.name = "playerhelper";
+				localPlayer.add( localPlayerHelper );
+
+			//	Player controller.
+
+				localPlayerController = new MW.CharacterController( localPlayer, playerRadius );
+				localPlayerController.movementSpeed = 50;
+				world.add( localPlayerController ); // important!
+
+			//	CameraLight target.
+				cameraLight.target = localPlayer;
+
+			//	Update rotation.
+				(function update(){
+					requestAnimationFrame( update );
+					localPlayer.rotation.y = localPlayerController.direction + Math.PI; // important!
+				})();
+
+			})();
+
+		//	cameraControls, keyInputControls.
+
+			(function(){
+
+				keyInputControls = new MW.KeyInputControl();
+
+				cameraControls = new MW.TPSCameraControl(
+
+					camera, 			// three.js camera.
+					localPlayer,		// tracking object.
+
+					{
+						el: renderer.domElement,
+						offset: new THREE.Vector3( 0, 0, 0 ), // eye height.
+						radius: 34, // default distance of the character to the camera.
+						minRadius: 1,
+						maxRadius: 280,
+						rigidObjects: []
+					}
+
+				);
+
+			//	bind events.
+
+				keyInputControls.addEventListener( "movekeyon", function () { 
+					localPlayerController.isRunning = true; 
+				});
+
+				keyInputControls.addEventListener( "movekeyoff", function () { 
+					localPlayerController.isRunning = false; 
+				});
+
+				keyInputControls.addEventListener( "jumpkeypress", function () { 
+					localPlayerController.jump(); 
+				});
+
+			// synch with keybord input and camera control input.
+
+				keyInputControls.addEventListener( "movekeychange",  function () {
+					var cameraFrontAngle = cameraControls.getFrontAngle();
+					var characterFrontAngle = keyInputControls.frontAngle;
+					localPlayerController.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
+				});
+
+			/*
+			//	"updated" event is fired by "cameraControls.update()"
+				cameraControls.addEventListener( "updated", function () {
+
+				//	it updates character front angle with the camera view.
+				//  We want camera independed from character front angle,
+				//	so we keep it disactivated. Maybe used somewhere later.
+
+					var cameraFrontAngle = cameraControls.getFrontAngle();
+					var characterFrontAngle = keyInputControls.frontAngle;
+					localPlayerController.direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
+
+				});
+			*/
+
+				(function update(){
+					requestAnimationFrame( update );
+					cameraControls.update();
+				})();
+
+			})();
+
+		//	joystickControls.
+
+			(function(){
+
+				var joystick1, joystick2;
+
+				var joysticControls1 = document.createElement( "div" );
+				joysticControls1.id = "joystick-controls-1";
+				joysticControls1.classList.add("joystick-controls");
+				document.body.appendChild( joysticControls1 );
+
+				var joysticControls2 = document.createElement( "div" );
+				joysticControls2.id = "joystick-controls-2";
+				joysticControls2.classList.add("joystick-controls");
+				document.body.appendChild( joysticControls2 );
+
+				var joystick1Selector  = "#joystick1";
+				var joystick2Selector  = "#joystick2";
+				var jumpButtonSelector = "#jumpButton";
+
+				var joystickControlsSelector  = ".joystick-controls";
+				var joystickControls1Selector = "#joystick-controls-1";
+				var joystickControls2Selector = "#joystick-controls-2";
+
+				joystick1  = new virtualInput.Joystick( $( joystickControls1Selector ), 94, { id: "joystick1" } );
+				joystick2  = new virtualInput.Joystick( $( joystickControls2Selector ), 94, { id: "joystick2" } );
+				jumpButton = new virtualInput.Button(   $( joystickControls1Selector ), 58, { id: "jumpButton", label: "<b>JUMP</b>" } ); // buttonSvgSrc
+
+				joystick1.addEventListener( "active", function onActive() { 
+
+					if (  localPlayerController.isJumping 
+						|| !localPlayerController.isGrounded 
+						|| localPlayerController.isOnSlope ) {
+						return;
+					}
+
+					localPlayerController.isRunning = true;
+
+				});
+
+				joystick1.addEventListener( "disactive", function onDisactive() { 
+
+					if (  localPlayerController.isJumping 
+						|| !localPlayerController.isGrounded 
+						||  localPlayerController.isOnSlope ) {
+						return;
+					}
+
+					localPlayerController.isRunning = false;
+
+				});
+
+				jumpButton.addEventListener( "press", function onPress() { 
+
+					if (  localPlayerController.isJumping 
+						|| !localPlayerController.isGrounded 
+						|| localPlayerController.isOnSlope ) {
+						return;
+					}
+
+					localPlayerController.jump();
+
+				});
+
+				joystick1.update = function(){
+
+					if ( this.isActive ) {
+
+						localPlayerController.direction = (3 * Math.PI/2) - cameraControls.getFrontAngle() + this.angle;
+
+					}
+				};
+
+				joystick2.update = function(){
+
+					if ( this.isActive ) {
+
+						cameraControls.setLatLon(
+							cameraControls.lat + this.position.y * 0.5, // deg.
+							cameraControls.lon - this.position.x        // deg.
+						);
+
+					}
+				};
+
+
+				(function update(){
+					requestAnimationFrame( update );
+					joystick1.update();
+					joystick2.update();
+				})();
+				
+			})();
+
+		</script>
+
+		<script>
+
+		//	Avatar loader.
+
+			var url = "/textme/animations/TextMeGirlv2.3_TextOnPhoneT49b.fbx";
+			var loader = new THREE.FBXLoader();
+			loader.load( url, function( group ){
+
+			//	object is THREE.Group.
+				group.name = "TextMeGirlv2.3";
+				var s = 0.00033; group.scale.set(s,s,s); // important!
+				group.position.y = -localPlayerController.radius;
+				debugMode && console.log( group ); 
+
+			//	Replace materials.
+				group.children.forEach( function( child ){
+
+					if ( child.type !== "SkinnedMesh" ) return;
+
+					if ( Array.isArray(child.material) ) {
+						child.material = child.material.map( function( item ){
+							var name = item.name;
+							return new THREE.MeshStandardMaterial({
+								name:name, skinning:true,
+							});
+						});
+
+					} else {
+
+						var name = child.material.name;
+						child.material = new THREE.MeshStandardMaterial({
+							name:name, skinning:true,
+						});
+
+					}
+
+					debugMode && console.log( child.material ); 
+				});
+
+
+			//	Collect skinned meshes.
+				var meshes = group.children.filter( function( item ){
+					return item.type === "SkinnedMesh";
+				});
+				//	TODO: Create mesh droplist to avatar tab.
+				//	TODO: Create material droplist to avatar tab.
+				debugMode && console.log( meshes ); 
+
+
+			//	Add group to scene.
+			//	must be add before animation controller.
+				localPlayer.add( group );
+				localPlayerHelper.visible = false;
+				localPlayerController.direction += Math.PI; // important!
+
+			/*
+			//	Update position/rotation.
+				(function update(){
+					requestAnimationFrame( update );
+					//	position.
+					group.position.set(
+						localPlayerController.center.x,
+						localPlayerController.center.y - localPlayerController.radius,
+						localPlayerController.center.z
+					);
+					//	rotation.
+					group.rotation.y = localPlayerController.direction + Math.PI; // important!
+				})();
+			*/
+
+			//	Animations.
+
+				var Signal = signals.Signal;
+				var droplistUpdated = new Signal();
+
+			//	CleanUp animation names.
+				var animations = group.animations;
+				animations.forEach( function( clip ){
+					clip.name = clip.name.replace("Armature|", "").toLowerCase();
+				});
+				debugMode && console.log( animations ); 
+
+
+			//	Animation controller.
+
+				animationController = new MW.AnimationController( group );
+				debugMode && console.log( "\t"+ Object.keys( animationController.motion ).join(",\n\t") );
+
+			/*
+					running,
+					falldown,
+					t-pose,
+					jumping,
+					sliding,
+					texting,
+					phoning,
+					idling
+			*/
+
+				animationController.motion.jumping.setLoop( THREE.LoopOnce, 0 );
+				animationController.motion.jumping.clampWhenFinished = true;
+				animationController.motion.falldown.setLoop( THREE.LoopOnce, 0 );
+				animationController.motion.falldown.clampWhenFinished = true;
+				animationController.motion["t-pose"].setLoop( THREE.LoopOnce, 0 );
+				animationController.motion["t-pose"].clampWhenFinished = true;
+
+			//	localPlayer controller motions.
+				localPlayerController.addEventListener( "startIdling",  function () { 
+					animationController.play( "idling"  ); 
+					droplistUpdated.dispatch( "idling" ); 
+				});
+				localPlayerController.addEventListener( "startWalking", function () { 
+					animationController.play( "running" ); 
+					droplistUpdated.dispatch( "running" ); 
+				});
+				localPlayerController.addEventListener( "startSliding", function () { 
+					animationController.play( "sliding" ); 
+					droplistUpdated.dispatch( "sliding" ); 
+				});
+				localPlayerController.addEventListener( "startFalling", function () { 
+					animationController.play( "sliding" ); 
+					droplistUpdated.dispatch( "sliding" ); 
+				});
+
+			//	Jumping.
+
+				localPlayerController.addEventListener( "startJumping", function () { 
+					if ( localPlayerController.isRunning ) {
+						animationController.play("jumping");
+						animationController.motion.jumping.reset();
+						droplistUpdated.dispatch( "jumping" );
+					} else {
+						animationController.play( "sliding" );
+						droplistUpdated.dispatch( "sliding" );
+					}
+				});
+
+			//	Additonal.
+
+				localPlayerController.addEventListener( "startTexting", function () { 
+					animationController.play( "texting" ); 
+					animationController.motion.texting.reset();
+					droplistUpdated.dispatch( "texting" ); 
+				});
+
+				localPlayerController.addEventListener( "startPhoning", function () { 
+					animationController.play( "phoning" ); 
+					animationController.motion.phoning.reset();
+					droplistUpdated.dispatch( "phoning" ); 
+				});
+
+				localPlayerController.addEventListener( "fallDown", function () { 
+					animationController.play( "falldown" ); 
+					animationController.motion.falldown.reset();
+					droplistUpdated.dispatch( "falldown" ); 
+				});
+
+			//	Texting.
+
+				(function(){
+
+					var interval;
+					var isTexting = false;
+					var action = "texting";
+					var clip = animationController.motion[ action ]._clip;
+					var timeout = clip.duration * 1000;
+					var input = document.getElementById("text-input");
+
+					input.addEventListener( "blur", function(){ 
+
+						isTexting = false;
+						clearTimeout( interval );
+						localPlayerController.dispatchEvent( {type:"startIdling"} );
+
+					});
+
+					input.addEventListener( "focus", function(){
+
+						clearTimeout( interval );
+
+						if ( isTexting || localPlayerController.isJumping ) {
+							
+							return;
+
+						}
+
+						isTexting = true; 
+
+						interval = setTimeout( function () {
+
+							if ( isTexting ) {
+
+								localPlayerController.dispatchEvent( {type:"startTexting"} );
+
+							} else if ( localPlayerController.isRunning ) {
+
+								isTexting = false;
+								localPlayerController.dispatchEvent( {type:"startWalking"} );
+
+							} else if ( localPlayerController.isIdling ) {
+
+								isTexting = false;
+								localPlayerController.dispatchEvent( {type:"startIdling"} );
+
+							}
+
+						}, timeout );
+
+						localPlayerController.dispatchEvent( {type:"startTexting"} );
+
+					});
+
+				})();
+
+
+			//	Animation droplist.
+			//	Create animation options to animation droplist.
+
+				(function(){
+
+					var select = document.getElementById("animation-droplist");
+					Object.keys( animationController.motion ).forEach( function( name ){
+						select.appendChild( createOption( name ) );
+					});
+
+					function createOption(name, i){
+						var option = document.createElement("option");
+						option.text = option.value = name;
+						return option;
+					}
+					
+					select.addEventListener("change", function(){
+						var name = select.value;
+						animationController.play( name );
+						if ( animationController.motion[name].clampWhenFinished ) {
+							animationController.motion[ name ].reset();
+						}
+					});
+					
+					droplistUpdated.add( function( name ){
+						select.value = name;
+					});
+
+				})();
+
+				var clock = new THREE.Clock();
+
+				(function update(){
+					requestAnimationFrame( update );
+					var delta = clock.getDelta();
+					animationController.update( delta );
+				})();
+
+				debugMode && console.log( animationController ); 
+				localPlayerController.dispatchEvent( {type:"startIdling"} );
+
+			});
+
+
+
+
+
+			/*
+					dispatcher.addEventListener( "texting", function () {
+
+						var playerController = localPlayer.controller;
+
+						if ( isTexting || playerController.isJumping ) {
+							
+							return;
+
+						}
+
+						isTexting = true; 
+
+						interval = setTimeout( function () {
+
+							if ( playerController.isIdling ) {
+
+								animationController.play( "standingIdle"  );
+
+
+							} else if ( playerController.isRunning ) {
+
+								animationController.play( "running" );
+
+							}
+
+							isTexting = false;
+
+						}, timeout );
+
+						animationController.play( action );
+
+					});
+
+			*/
+
+		</script>
+
+	</body>
+</html>
