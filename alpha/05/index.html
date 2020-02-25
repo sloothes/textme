@@ -56,6 +56,22 @@
 				right: calc(105px + 370px);
 			}
 
+			.btn-terrain {
+				padding:0;
+				float:left;
+				width:55px;
+				height:55px;
+				border:1px solid;
+				border-radius:4px;
+				margin-right:4px;
+				margin-bottom:4px;
+				display:inline-block;
+			}
+			
+			.btn-terrain + .btn-terrain {
+				margin-right:4px;
+			}
+
 		</style>
 	</head>
 
@@ -244,6 +260,7 @@
 								scene.remove(terrain);
 								terrain.geometry.dispose();
 								terrain.material.dispose();
+								octree.removeThreeMesh(terrain.geometry.uuid);
 							}
 
 							var url = "/textme/terrain/"+button.id+".png";
@@ -254,9 +271,10 @@
 
 							//	Matrix.
 							//  Do not forget the "()" at end of img2matrix.fromImage( ... )().
-								var matrix = img2matrix.fromImage( img, x, y, minH, maxH );
+								var minHeight = 0; var maxHeight = 10;
+								var matrix = img2matrix( img, img.width, img.height, minHeight, maxHeight );
 							//  Geometry.
-								var geometry = matrix2geometry( matrix,  img.width - 1 , img.height - 1 );
+								var geometry = matrix2geometry( matrix,  img.width-1 , img.height-1 );
 								geometry.rotateX(-Math.PI/2); 
 								geometry.computeBoundingBox();
 								geometry.center();
@@ -265,11 +283,15 @@
 							//  Terrain.
 								terrain = new THREE.Mesh(geometry, material);
 								terrain.position.set(0, 0, 0);
-							//  terrain.scale.set(s, s, s);
-								terrain.receiveShadow = true;
+								var s = 20; terrain.scale.set(s, s, s);
 								terrain.geometry.applyMatrix( terrain.matrix );
 								console.log("terrain:", terrain);
-							//	scene.add( terrain );
+								scene.add( terrain );
+								octree.importThreeMesh( terrain );
+								localPlayerController.center.y = 50;
+								localPlayerController.isIdling = false; // important!
+								cameraControls.rigidObjects = [terrain];
+
 
 							});
 
